@@ -32,6 +32,7 @@ class Strings {
   static const String keepScreenOnLabel = 'Keep screen on during search';
   static const String dailyReminderAt = 'Daily reminder at ';
   static const String remindersLabel = 'Reminders';
+  static const String displayLabel = 'Display & Behavior';
   static const String appLabel = 'App';
   static const String exitApp = 'Exit';
   static const String loggedInHint =

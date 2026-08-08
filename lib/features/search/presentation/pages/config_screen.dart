@@ -85,76 +85,121 @@ class _ConfigScreenState extends State<ConfigScreen> {
   @override
   Widget build(BuildContext context) {
     final themeController = sl<ThemeController>();
-        return ListenableBuilder(
+    return ListenableBuilder(
       listenable: themeController,
       builder: (context, _) {
         return ListView(
           padding: const EdgeInsets.all(16),
-children: [
-            _sectionTitle(Strings.themeLabel),
-            RadioGroup<AppThemeMode>(
-              groupValue: themeController.mode,
-              onChanged: (value) => themeController.setMode(value!),
-              child: Column(
-                children: AppThemeMode.values.map((mode) {
-                  return RadioListTile<AppThemeMode>(
-                    value: mode,
-                    title: Text(_themeLabel(mode)),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  );
-                }).toList(),
+          children: [
+            Card(
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionTitle(Strings.displayLabel),
+                    RadioGroup<AppThemeMode>(
+                      groupValue: themeController.mode,
+                      onChanged: (value) => themeController.setMode(value!),
+                      child: Column(
+                        children: AppThemeMode.values.map((mode) {
+                          return RadioListTile<AppThemeMode>(
+                            value: mode,
+                            title: Text(_themeLabel(mode)),
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const Divider(height: 24),
+                    SwitchListTile(
+                      value: themeController.amoledOverlay,
+                      onChanged: (value) =>
+                          themeController.setAmoledOverlay(value),
+                      title: const Text(Strings.amoledOverlayTitle),
+                      subtitle: const Text(Strings.amoledOverlayHint),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    CheckboxListTile(
+                      value: _keepScreenOn,
+                      onChanged: (value) =>
+                          _onKeepScreenOnChanged(value ?? false),
+                      title: const Text(Strings.keepScreenOnLabel),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
               ),
             ),
-            const Divider(height: 32),
-            _sectionTitle(Strings.remindersLabel),
-            SwitchListTile(
-              value: themeController.amoledOverlay,
-              onChanged: (value) => themeController.setAmoledOverlay(value),
-              title: const Text(Strings.amoledOverlayTitle),
-              subtitle: const Text(Strings.amoledOverlayHint),
-              contentPadding: EdgeInsets.zero,
-            ),
-            CheckboxListTile(
-              value: _sendDailyReminder,
-              onChanged: (value) => _onDailyReminderChanged(value ?? false),
-              title: const Text(Strings.dailyReminderAt),
-              secondary: Text(
-                _selectedTime.format(context),
-                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            Card(
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionTitle(Strings.remindersLabel),
+                    CheckboxListTile(
+                      value: _sendDailyReminder,
+                      onChanged: (value) =>
+                          _onDailyReminderChanged(value ?? false),
+                      title: Row(
+                        children: [
+                          const Text(Strings.dailyReminderAt),
+                          const SizedBox(width: 8),
+                          ActionChip(
+                            label: Text(_selectedTime.format(context)),
+                            avatar: const Icon(Icons.access_time, size: 16),
+                            onPressed: _selectTime,
+                          ),
+                        ],
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
               ),
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
             ),
-            TextButton.icon(
-              onPressed: _selectTime,
-              icon: const Icon(Icons.access_time),
-              label: const Text('Change time'),
-            ),
-            CheckboxListTile(
-              value: _keepScreenOn,
-              onChanged: (value) => _onKeepScreenOnChanged(value ?? false),
-              title: const Text(Strings.keepScreenOnLabel),
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-            ),
-            const Divider(height: 32),
-            _sectionTitle(Strings.appLabel),
-            ListTile(
-              leading: const Icon(Icons.code),
-              title: const Text('Developer (@znarfm)'),
-              subtitle: const Text('https://github.com/znarfm'),
-              trailing: const Icon(Icons.open_in_new, size: 18),
-              onTap: () => InAppBrowser.openWithSystemBrowser(
-                url: WebUri('https://github.com/znarfm'),
+            Card(
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionTitle(Strings.appLabel),
+                    ListTile(
+                      leading: const Icon(Icons.code),
+                      title: const Text('Developer (@znarfm)'),
+                      subtitle: const Text('https://github.com/znarfm'),
+                      trailing: const Icon(Icons.open_in_new, size: 18),
+                      onTap: () => InAppBrowser.openWithSystemBrowser(
+                        url: WebUri('https://github.com/znarfm'),
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.power_settings_new),
+                      title: const Text(Strings.exitApp),
+                      onTap: () => SystemNavigator.pop(),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
               ),
-              contentPadding: EdgeInsets.zero,
-            ),
-            ListTile(
-              leading: const Icon(Icons.power_settings_new),
-              title: const Text(Strings.exitApp),
-              onTap: () => SystemNavigator.pop(),
-              contentPadding: EdgeInsets.zero,
             ),
           ],
         );

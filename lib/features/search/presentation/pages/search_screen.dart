@@ -336,19 +336,35 @@ class SearchFormState extends State<SearchForm> {
           return Column(
             children: [
               Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: InAppWebView(
-                    initialUrlRequest:
-                        URLRequest(url: WebUri("https://www.bing.com")),
-                    onWebViewCreated: (controller) =>
-                        _webViewController = controller,
-                    initialSettings: InAppWebViewSettings(
-                      javaScriptEnabled: true,
-                      cacheEnabled: true,
-                      incognito: false,
-                      clearSessionCache: false,
-                      clearCache: false,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(12),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(11),
+                    child: InAppWebView(
+                      initialUrlRequest:
+                          URLRequest(url: WebUri("https://www.bing.com")),
+                      onWebViewCreated: (controller) =>
+                          _webViewController = controller,
+                      initialSettings: InAppWebViewSettings(
+                        javaScriptEnabled: true,
+                        cacheEnabled: true,
+                        incognito: false,
+                        clearSessionCache: false,
+                        clearCache: false,
+                      ),
                     ),
                   ),
                 ),
@@ -433,14 +449,43 @@ class SearchFormState extends State<SearchForm> {
 
                 const SizedBox(height: 6),
 
-                // Progress text (e.g. 4/20)
-                Text(
-                  '${state.currentCount}/${state.totalCount} completed',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                // Progress text + percentage badge
+                Builder(
+                  builder: (context) {
+                    final percent = (state.totalCount > 0)
+                        ? ((state.currentCount / state.totalCount) * 100).toInt()
+                        : 0;
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${state.currentCount}/${state.totalCount} completed',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withAlpha(38),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '$percent%',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
               ],
