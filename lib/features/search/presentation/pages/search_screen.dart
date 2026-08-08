@@ -47,6 +47,12 @@ class _SearchScreenState extends State<SearchScreen> {
             _overlayDismissed) {
           setState(() => _overlayDismissed = false);
         }
+        final themeCtrl = sl<ThemeController>();
+        final overlayOn = themeCtrl.mode == AppThemeMode.amoled &&
+            themeCtrl.amoledOverlay &&
+            !_overlayDismissed;
+        final showOverlay = state is SearchInProgress && overlayOn;
+        _applySystemUi(showOverlay);
       },
       child: BlocBuilder<SearchBloc, SearchState>(
         builder: (context, state) {
@@ -55,7 +61,6 @@ class _SearchScreenState extends State<SearchScreen> {
               themeCtrl.amoledOverlay &&
               !_overlayDismissed;
           final showOverlay = state is SearchInProgress && overlayOn;
-          _applySystemUi(showOverlay);
 
           return PopScope(
             canPop: false,
@@ -92,28 +97,12 @@ class _SearchScreenState extends State<SearchScreen> {
                       },
                     ),
                   ),
-                  body: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.02),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: _tabIndex == 0
-                        ? SearchTab(
-                            key: const ValueKey(0),
-                            formKey: _searchFormKey,
-                          )
-                        : const ConfigScreen(key: ValueKey(1)),
+                  body: IndexedStack(
+                    index: _tabIndex,
+                    children: [
+                      SearchTab(formKey: _searchFormKey),
+                      const ConfigScreen(),
+                    ],
                   ),
                   bottomNavigationBar: NavigationBar(
                     selectedIndex: _tabIndex,

@@ -107,13 +107,15 @@ class SearchFormState extends State<SearchForm> {
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(11),
-                    child: InAppWebView(
-                      initialUrlRequest: _initialBingRequest,
-                      onWebViewCreated: (controller) =>
-                          _webViewController = controller,
-                      initialSettings: _webSettings,
+                  child: RepaintBoundary(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(11),
+                      child: InAppWebView(
+                        initialUrlRequest: _initialBingRequest,
+                        onWebViewCreated: (controller) =>
+                            _webViewController = controller,
+                        initialSettings: _webSettings,
+                      ),
                     ),
                   ),
                 ),
