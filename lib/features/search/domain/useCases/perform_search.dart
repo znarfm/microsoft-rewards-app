@@ -13,7 +13,7 @@ class PerformSearch {
     required double delay,
     required SearchCancellationToken cancellationToken,
     required InAppWebViewController controller,
-    required void Function(int currentCount, int totalCount) onProgress,
+    required void Function(int currentCount, int totalCount, int remainingSeconds) onProgress,
   }) async {
     if (count < 1) throw ArgumentError('Count must be positive');
     if (delay < 0) throw ArgumentError('Delay must be non-negative');

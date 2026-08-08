@@ -7,6 +7,6 @@ abstract class SearchRepository {
     required double delay,
     required SearchCancellationToken cancellationToken,
     required InAppWebViewController controller,
-    required void Function(int currentCount, int totalCount) onProgress,
+    required void Function(int currentCount, int totalCount, int remainingSeconds) onProgress,
   });
 }

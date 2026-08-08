@@ -27,9 +27,13 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
         delay: event.delay,
         cancellationToken: _cancelToken,
         controller: event.controller,
-        onProgress: (currentCount, totalCount) {
+        onProgress: (currentCount, totalCount, remainingSeconds) {
           if (!_cancelToken.isCancelled) {
-            emit(SearchInProgress(currentCount: currentCount, totalCount: event.count));
+            emit(SearchInProgress(
+              currentCount: currentCount,
+              totalCount: event.count,
+              remainingSeconds: remainingSeconds,
+            ));
           }
         },
       );
@@ -83,10 +87,17 @@ class SearchInProgress extends SearchState {
   final bool isCancelled;
   final int currentCount;
   final int totalCount;
-  const SearchInProgress({this.isCancelled = false, this.currentCount = 0, this.totalCount = 0});
+  final int remainingSeconds;
+  const SearchInProgress({
+    this.isCancelled = false,
+    this.currentCount = 0,
+    this.totalCount = 0,
+    this.remainingSeconds = 0,
+  });
 
   @override
-  List<Object> get props => [isCancelled, currentCount];
+  List<Object> get props =>
+      [isCancelled, currentCount, totalCount, remainingSeconds];
 }
 
 class SearchCancelled extends SearchState {}

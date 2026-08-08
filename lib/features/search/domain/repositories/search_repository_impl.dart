@@ -22,21 +22,28 @@ class SearchRepositoryImpl implements SearchRepository {
     required double delay,
     required SearchCancellationToken cancellationToken,
     required InAppWebViewController controller,
-    required void Function(int currentCount, int totalCount) onProgress,
-}) async {
+    required void Function(int currentCount, int totalCount, int remainingSeconds) onProgress,
+  }) async {
     try {
       final random = Random();
       for (int i = 0; i < count; i++) {
         if (cancellationToken.isCancelled) {
           break;
         }
-        onProgress(i + 1, count);
+        onProgress(i + 1, count, 0);
         final query = dataSource.randomSentence();
         await SearchHelper.launchSearch(controller: controller, query: query);
 
         if (i < count - 1) {
-          int delayInMilli = (delay * 1000 + random.nextInt(1001)).toInt();
-          await Future.delayed(Duration(milliseconds: delayInMilli));
+          final totalDelayMs = (delay * 1000 + random.nextInt(1001)).toInt();
+          final totalSeconds = (totalDelayMs / 1000).ceil();
+          for (int sec = totalSeconds; sec > 0; sec--) {
+            if (cancellationToken.isCancelled) return;
+            onProgress(i + 1, count, sec);
+            await Future.delayed(const Duration(seconds: 1));
+          }
+        } else {
+          onProgress(i + 1, count, 0);
         }
       }
     } catch (e) {

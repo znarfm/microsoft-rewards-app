@@ -147,26 +147,37 @@ class SearchFormState extends State<SearchForm> {
               ),
               const SizedBox(height: 12),
               if (isInProgress) ...[
-                // Spinner + animated dots
+                // Countdown or spinner + animated dots
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Searching.',
-                      style: TextStyle(fontSize: 16, color: primaryColor),
-                    ),
-                    AnimatedTextKit(
-                      repeatForever: true,
-                      animatedTexts: [
-                        TyperAnimatedText('..',
-                            textStyle: TextStyle(
-                                fontSize: 16, color: primaryColor),
-                            speed: const Duration(milliseconds: 1000)),
-                      ],
-                      isRepeatingAnimation: true,
-                      pause: const Duration(milliseconds: 200),
-                      displayFullTextOnTap: false,
-                    ),
+                    if (state.remainingSeconds > 0)
+                      Text(
+                        'Next search in ${state.remainingSeconds}s…',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: primaryColor,
+                        ),
+                      )
+                    else ...[
+                      Text(
+                        'Searching.',
+                        style: TextStyle(fontSize: 16, color: primaryColor),
+                      ),
+                      AnimatedTextKit(
+                        repeatForever: true,
+                        animatedTexts: [
+                          TyperAnimatedText('..',
+                              textStyle: TextStyle(
+                                  fontSize: 16, color: primaryColor),
+                              speed: const Duration(milliseconds: 1000)),
+                        ],
+                        isRepeatingAnimation: true,
+                        pause: const Duration(milliseconds: 200),
+                        displayFullTextOnTap: false,
+                      ),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 8),
