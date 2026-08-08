@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/strings.dart';
@@ -139,6 +140,16 @@ children: [
             ),
             const Divider(height: 32),
             _sectionTitle(Strings.appLabel),
+            ListTile(
+              leading: const Icon(Icons.code),
+              title: const Text('Developer (@znarfm)'),
+              subtitle: const Text('https://github.com/znarfm'),
+              trailing: const Icon(Icons.open_in_new, size: 18),
+              onTap: () => InAppBrowser.openWithSystemBrowser(
+                url: WebUri('https://github.com/znarfm'),
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
             ListTile(
               leading: const Icon(Icons.power_settings_new),
               title: const Text(Strings.exitApp),

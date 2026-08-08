@@ -158,64 +158,35 @@ class _SearchTab extends StatefulWidget {
 }
 
 class _SearchTabState extends State<_SearchTab> {
-  final GlobalKey<SearchFormState> _searchFormKey = GlobalKey();
-
   @override
   Widget build(BuildContext context) {
     final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
 
-    return Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding),
-          child: Column(
-            children: [
-              Expanded(
-                child: BlocListener<SearchBloc, SearchState>(
-                  listener: _handleStateChanges,
-                  child: SearchForm(key: _searchFormKey),
-                ),
-              ),
-              if (!isKeyboardVisible) const Divider(),
-              if (!isKeyboardVisible)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    Strings.loggedInHint,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: Theme.of(context).colorScheme.outline),
-                  ),
-                ),
-              const SizedBox(height: 48), // Reserve space for the bottom row
-            ],
-          ),
-        ),
-        // Bottom row positioned
-        if (!isKeyboardVisible)
-          Positioned(
-            bottom: 12,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                TextButton(
-                  onPressed: () => openInWebView(
-                      'https://svitspindler.com/microsoft-automatic-rewards'),
-                  child: const Text('Help'),
-                ),
-                TextButton(
-                  onPressed: () =>
-                      openInWebView('https://rewards.bing.com/'),
-                  child: const Text('Rewards'),
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      child: Column(
+        children: [
+          Expanded(
+            child: BlocListener<SearchBloc, SearchState>(
+              listener: _handleStateChanges,
+              child: const SearchForm(),
             ),
           ),
-      ],
+          if (!isKeyboardVisible) const Divider(),
+          if (!isKeyboardVisible)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                Strings.loggedInHint,
+                textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Theme.of(context).colorScheme.outline),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -268,16 +239,6 @@ class _SearchTabState extends State<_SearchTab> {
     }
     if (state is SearchFailure || state is SearchSuccess) {
       WakelockPlus.disable();
-    }
-  }
-
-  void openInWebView(String url) {
-    if (_searchFormKey.currentState != null) {
-      _searchFormKey.currentState!.openInWebView(url);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(Strings.browserNotReady)),
-      );
     }
   }
 }
@@ -359,101 +320,103 @@ class SearchFormState extends State<SearchForm> {
             validator: InputValidators.validateDelay,
           ),
           const SizedBox(height: AppConstants.defaultPadding),
-          BlocBuilder<SearchBloc, SearchState>(
-            builder: (context, state) {
-              final isInProgress = state is SearchInProgress;
-              return Column(
-                children: [
-                  CustomButton(
-                    onPressed: isInProgress ? _cancelSearch : _startSearch,
-                    text: _getButtonText(state),
-                  ),
-                  if (isInProgress) ...[
-                    const SizedBox(height: 12),
-
-                    // Spinner + animated dots
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Searching.',
-                          style: TextStyle(fontSize: 16, color: Colors.blue),
-                        ),
-                        AnimatedTextKit(
-                          repeatForever: true,
-                          animatedTexts: [
-                            TyperAnimatedText('..',
-                                textStyle: const TextStyle(
-                                    fontSize: 16, color: Colors.blue),
-                                speed: const Duration(milliseconds: 1000)),
-                          ],
-                          isRepeatingAnimation: true,
-                          pause: const Duration(milliseconds: 200),
-                          displayFullTextOnTap: false,
-                        ),
-                      ],
+          Expanded(
+            child: BlocBuilder<SearchBloc, SearchState>(
+              builder: (context, state) {
+                final isInProgress = state is SearchInProgress;
+                return Column(
+                  children: [
+                    CustomButton(
+                      onPressed: isInProgress ? _cancelSearch : _startSearch,
+                      text: _getButtonText(state),
                     ),
-                    const SizedBox(height: 12),
+                    if (isInProgress) ...[
+                      const SizedBox(height: 12),
 
-                    // Animated linear progress bar
-                    TweenAnimationBuilder<double>(
-                      duration: const Duration(milliseconds: 300),
-                      tween: Tween<double>(
-                        begin: 0,
-                        end: state.totalCount > 0
-                            ? state.currentCount / state.totalCount
-                            : 0,
-                      ),
-                      builder: (context, value, _) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: LinearProgressIndicator(
-                              value: value,
-                              minHeight: 10,
-                              backgroundColor: Colors.grey.shade300,
-                              color: Colors.blue,
-                            ),
+                      // Spinner + animated dots
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Searching.',
+                            style: TextStyle(fontSize: 16, color: Colors.blue),
                           ),
-                        );
-                      },
-                    ),
+                          AnimatedTextKit(
+                            repeatForever: true,
+                            animatedTexts: [
+                              TyperAnimatedText('..',
+                                  textStyle: const TextStyle(
+                                      fontSize: 16, color: Colors.blue),
+                                  speed: const Duration(milliseconds: 1000)),
+                            ],
+                            isRepeatingAnimation: true,
+                            pause: const Duration(milliseconds: 200),
+                            displayFullTextOnTap: false,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
 
-                    const SizedBox(height: 8),
+                      // Animated linear progress bar
+                      TweenAnimationBuilder<double>(
+                        duration: const Duration(milliseconds: 300),
+                        tween: Tween<double>(
+                          begin: 0,
+                          end: state.totalCount > 0
+                              ? state.currentCount / state.totalCount
+                              : 0,
+                        ),
+                        builder: (context, value, _) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 32),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: LinearProgressIndicator(
+                                value: value,
+                                minHeight: 10,
+                                backgroundColor: Colors.grey.shade300,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
 
-                    // Progress text (e.g. 4/20)
-                    Text(
-                      '${state.currentCount}/${state.totalCount} completed',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                      const SizedBox(height: 8),
+
+                      // Progress text (e.g. 4/20)
+                      Text(
+                        '${state.currentCount}/${state.totalCount} completed',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: InAppWebView(
+                          initialUrlRequest:
+                              URLRequest(url: WebUri("https://www.bing.com")),
+                          onWebViewCreated: (controller) =>
+                              _webViewController = controller,
+                          initialSettings: InAppWebViewSettings(
+                            javaScriptEnabled: true,
+                            cacheEnabled: true,
+                            incognito: false,
+                            clearSessionCache: false,
+                            clearCache: false,
+                          ),
+                        ),
                       ),
                     ),
                   ],
-                  const SizedBox(height: AppConstants.defaultPadding * 2),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height *
-                        (state is SearchInProgress ? 0.3 : 0.4),
-                    child: InAppWebView(
-                      initialUrlRequest:
-                          URLRequest(url: WebUri("https://www.bing.com")),
-                      onWebViewCreated: (controller) =>
-                          _webViewController = controller,
-                      initialSettings: InAppWebViewSettings(
-                        javaScriptEnabled: true,
-                        cacheEnabled: true,
-                        incognito: false,
-                        clearSessionCache: false,
-                        clearCache: false,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16), // Bottom margin
-                ],
-              );
-            },
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -479,16 +442,6 @@ class SearchFormState extends State<SearchForm> {
           delay: double.parse(_delayController.text),
           controller: _webViewController!,
         ));
-  }
-
-  void openInWebView(String url) {
-    if (_webViewController != null) {
-      _webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(Strings.browserNotReady)),
-      );
-    }
   }
 
   void _cancelSearch() {
