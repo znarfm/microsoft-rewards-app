@@ -389,10 +389,10 @@ class SearchFormState extends State<SearchForm> {
                       // Progress text (e.g. 4/20)
                       Text(
                         '${state.currentCount}/${state.totalCount} completed',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ],
