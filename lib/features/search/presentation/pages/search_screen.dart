@@ -306,119 +306,125 @@ class SearchFormState extends State<SearchForm> {
       key: _formKey,
       child: Column(
         children: [
-          CustomTextField(
-            controller: _countController,
-            labelText: Strings.searchCountLabel,
-            hintText: Strings.searchCountHint,
-            keyboardType: TextInputType.number,
-            validator: InputValidators.validateSearchCount,
-          ),
-          const SizedBox(height: AppConstants.defaultPadding),
-          CustomTextField(
-            controller: _delayController,
-            labelText: Strings.delayLabel,
-            hintText: Strings.delayHint,
-            keyboardType: TextInputType.number,
-            validator: InputValidators.validateDelay,
-          ),
-          const SizedBox(height: AppConstants.defaultPadding),
           Expanded(
-            child: BlocBuilder<SearchBloc, SearchState>(
-              builder: (context, state) {
-                final isInProgress = state is SearchInProgress;
-                return Column(
-                  children: [
-                    CustomButton(
-                      onPressed: isInProgress ? _cancelSearch : _startSearch,
-                      text: _getButtonText(state),
-                    ),
-                    if (isInProgress) ...[
-                      const SizedBox(height: 12),
-
-                      // Spinner + animated dots
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Searching.',
-                            style: TextStyle(fontSize: 16, color: Colors.blue),
-                          ),
-                          AnimatedTextKit(
-                            repeatForever: true,
-                            animatedTexts: [
-                              TyperAnimatedText('..',
-                                  textStyle: const TextStyle(
-                                      fontSize: 16, color: Colors.blue),
-                                  speed: const Duration(milliseconds: 1000)),
-                            ],
-                            isRepeatingAnimation: true,
-                            pause: const Duration(milliseconds: 200),
-                            displayFullTextOnTap: false,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Animated linear progress bar
-                      TweenAnimationBuilder<double>(
-                        duration: const Duration(milliseconds: 300),
-                        tween: Tween<double>(
-                          begin: 0,
-                          end: state.totalCount > 0
-                              ? state.currentCount / state.totalCount
-                              : 0,
-                        ),
-                        builder: (context, value, _) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 32),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: LinearProgressIndicator(
-                                value: value,
-                                minHeight: 10,
-                                backgroundColor: Colors.grey.shade300,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Progress text (e.g. 4/20)
-                      Text(
-                        '${state.currentCount}/${state.totalCount} completed',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: InAppWebView(
-                          initialUrlRequest:
-                              URLRequest(url: WebUri("https://www.bing.com")),
-                          onWebViewCreated: (controller) =>
-                              _webViewController = controller,
-                          initialSettings: InAppWebViewSettings(
-                            javaScriptEnabled: true,
-                            cacheEnabled: true,
-                            incognito: false,
-                            clearSessionCache: false,
-                            clearCache: false,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: InAppWebView(
+                initialUrlRequest:
+                    URLRequest(url: WebUri("https://www.bing.com")),
+                onWebViewCreated: (controller) =>
+                    _webViewController = controller,
+                initialSettings: InAppWebViewSettings(
+                  javaScriptEnabled: true,
+                  cacheEnabled: true,
+                  incognito: false,
+                  clearSessionCache: false,
+                  clearCache: false,
+                ),
+              ),
             ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: CustomTextField(
+                  controller: _countController,
+                  labelText: Strings.searchCountLabel,
+                  hintText: Strings.searchCountHint,
+                  keyboardType: TextInputType.number,
+                  validator: InputValidators.validateSearchCount,
+                ),
+              ),
+              const SizedBox(width: AppConstants.defaultPadding),
+              Expanded(
+                child: CustomTextField(
+                  controller: _delayController,
+                  labelText: Strings.delayLabel,
+                  hintText: Strings.delayHint,
+                  keyboardType: TextInputType.number,
+                  validator: InputValidators.validateDelay,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          BlocBuilder<SearchBloc, SearchState>(
+            builder: (context, state) {
+              final isInProgress = state is SearchInProgress;
+              return Column(
+                children: [
+                  if (isInProgress) ...[
+                    // Spinner + animated dots
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Searching.',
+                          style: TextStyle(fontSize: 16, color: Colors.blue),
+                        ),
+                        AnimatedTextKit(
+                          repeatForever: true,
+                          animatedTexts: [
+                            TyperAnimatedText('..',
+                                textStyle: const TextStyle(
+                                    fontSize: 16, color: Colors.blue),
+                                speed: const Duration(milliseconds: 1000)),
+                          ],
+                          isRepeatingAnimation: true,
+                          pause: const Duration(milliseconds: 200),
+                          displayFullTextOnTap: false,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Animated linear progress bar
+                    TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 300),
+                      tween: Tween<double>(
+                        begin: 0,
+                        end: state.totalCount > 0
+                            ? state.currentCount / state.totalCount
+                            : 0,
+                      ),
+                      builder: (context, value, _) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: value,
+                              minHeight: 10,
+                              backgroundColor: Colors.grey.shade300,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    // Progress text (e.g. 4/20)
+                    Text(
+                      '${state.currentCount}/${state.totalCount} completed',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  CustomButton(
+                    onPressed: isInProgress ? _cancelSearch : _startSearch,
+                    text: _getButtonText(state),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
