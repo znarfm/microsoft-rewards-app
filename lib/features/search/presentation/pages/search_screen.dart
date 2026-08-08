@@ -31,6 +31,7 @@ class _SearchScreenState extends State<SearchScreen> {
   // persisted toggle — it comes back on the next search.
   bool _overlayDismissed = false;
   bool _systemUiHidden = false;
+  final GlobalKey<SearchFormState> _searchFormKey = GlobalKey();
 
   @override
   void initState() {
@@ -162,15 +163,20 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   body: IndexedStack(
                       index: _tabIndex,
-                      children: const [
-                        _SearchTab(),
-                        ConfigScreen(),
+                      children: [
+                        _SearchTab(formKey: _searchFormKey),
+                        const ConfigScreen(),
                       ],
                     ),
                     bottomNavigationBar: NavigationBar(
                       selectedIndex: _tabIndex,
-                      onDestinationSelected: (index) =>
-                          setState(() => _tabIndex = index),
+                      onDestinationSelected: (index) {
+                        if (index == 0 && _tabIndex == 0) {
+                          _searchFormKey.currentState?.triggerSearchAction();
+                        } else {
+                          setState(() => _tabIndex = index);
+                        }
+                      },
                       destinations: const [
                         NavigationDestination(
                           icon: Icon(Icons.search),
@@ -227,7 +233,8 @@ class _SearchScreenState extends State<SearchScreen> {
 /// Search tab content: inputs, WebView, and progress. The AMOLED
 /// screen-off overlay lives at the shell level (covers the full UI).
 class _SearchTab extends StatefulWidget {
-  const _SearchTab();
+  final GlobalKey<SearchFormState>? formKey;
+  const _SearchTab({this.formKey});
 
   @override
   State<_SearchTab> createState() => _SearchTabState();
@@ -240,7 +247,7 @@ class _SearchTabState extends State<_SearchTab> {
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       child: BlocListener<SearchBloc, SearchState>(
         listener: _handleStateChanges,
-        child: const SearchForm(),
+        child: SearchForm(key: widget.formKey),
       ),
     );
   }
@@ -574,6 +581,13 @@ class SearchFormState extends State<SearchForm> {
           delay: double.parse(_delayController.text),
           controller: _webViewController!,
         ));
+  }
+
+  void triggerSearchAction() {
+    final state = context.read<SearchBloc>().state;
+    if (state is! SearchInProgress) {
+      _startSearch();
+    }
   }
 
   void _cancelSearch() {
