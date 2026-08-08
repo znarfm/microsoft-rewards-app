@@ -88,6 +88,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _showLoginReminderPopup = sl<PreferencesService>().showLoginReminderPopup;
     final themeController = sl<ThemeController>();
     return ListenableBuilder(
       listenable: themeController,
