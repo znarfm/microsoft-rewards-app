@@ -129,13 +129,25 @@ class _ConfigScreenState extends State<ConfigScreen> {
                       ),
                     ),
                     const Divider(height: 24),
-                    SwitchListTile(
-                      value: themeController.amoledOverlay,
-                      onChanged: (value) =>
-                          themeController.setAmoledOverlay(value),
-                      title: const Text(Strings.amoledOverlayTitle),
-                      subtitle: const Text(Strings.amoledOverlayHint),
-                      contentPadding: EdgeInsets.zero,
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOutCubic,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 200),
+                        opacity: themeController.mode == AppThemeMode.amoled
+                            ? 1.0
+                            : 0.0,
+                        child: themeController.mode == AppThemeMode.amoled
+                            ? SwitchListTile(
+                                value: themeController.amoledOverlay,
+                                onChanged: (value) =>
+                                    themeController.setAmoledOverlay(value),
+                                title: const Text(Strings.amoledOverlayTitle),
+                                subtitle: const Text(Strings.amoledOverlayHint),
+                                contentPadding: EdgeInsets.zero,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
                     ),
                     SwitchListTile(
                       value: _keepScreenOn,

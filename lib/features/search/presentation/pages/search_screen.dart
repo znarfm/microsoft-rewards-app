@@ -50,8 +50,10 @@ class _SearchScreenState extends State<SearchScreen> {
       },
       child: BlocBuilder<SearchBloc, SearchState>(
         builder: (context, state) {
-          final overlayOn =
-              sl<ThemeController>().amoledOverlay && !_overlayDismissed;
+          final themeCtrl = sl<ThemeController>();
+          final overlayOn = themeCtrl.mode == AppThemeMode.amoled &&
+              themeCtrl.amoledOverlay &&
+              !_overlayDismissed;
           final showOverlay = state is SearchInProgress && overlayOn;
           _applySystemUi(showOverlay);
 
@@ -90,12 +92,28 @@ class _SearchScreenState extends State<SearchScreen> {
                       },
                     ),
                   ),
-                  body: IndexedStack(
-                    index: _tabIndex,
-                    children: [
-                      SearchTab(formKey: _searchFormKey),
-                      const ConfigScreen(),
-                    ],
+                  body: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.02),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _tabIndex == 0
+                        ? SearchTab(
+                            key: const ValueKey(0),
+                            formKey: _searchFormKey,
+                          )
+                        : const ConfigScreen(key: ValueKey(1)),
                   ),
                   bottomNavigationBar: NavigationBar(
                     selectedIndex: _tabIndex,

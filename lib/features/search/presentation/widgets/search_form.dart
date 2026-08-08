@@ -51,7 +51,7 @@ class SearchFormState extends State<SearchForm> {
     saveDelayValue();
     _countController.dispose();
     _delayController.dispose();
-    _webViewController?.dispose();
+    _webViewController = null;
     super.dispose();
   }
 
@@ -145,103 +145,122 @@ class SearchFormState extends State<SearchForm> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              if (isInProgress) ...[
-                // Countdown or spinner + animated dots
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (state.remainingSeconds > 0)
-                      Text(
-                        'Next search in ${state.remainingSeconds}s…',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: primaryColor,
-                        ),
-                      )
-                    else ...[
-                      Text(
-                        'Searching.',
-                        style: TextStyle(fontSize: 16, color: primaryColor),
-                      ),
-                      AnimatedTextKit(
-                        repeatForever: true,
-                        animatedTexts: [
-                          TyperAnimatedText('..',
-                              textStyle: TextStyle(
-                                  fontSize: 16, color: primaryColor),
-                              speed: const Duration(milliseconds: 1000)),
-                        ],
-                        isRepeatingAnimation: true,
-                        pause: const Duration(milliseconds: 200),
-                        displayFullTextOnTap: false,
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 8),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOutCubic,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  child: isInProgress
+                      ? Column(
+                          key: const ValueKey('progress_active'),
+                          children: [
+                            const SizedBox(height: 12),
+                            // Countdown or spinner + animated dots
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (state.remainingSeconds > 0)
+                                  Text(
+                                    'Next search in ${state.remainingSeconds}s…',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: primaryColor,
+                                    ),
+                                  )
+                                else ...[
+                                  Text(
+                                    'Searching.',
+                                    style: TextStyle(
+                                        fontSize: 16, color: primaryColor),
+                                  ),
+                                  AnimatedTextKit(
+                                    repeatForever: true,
+                                    animatedTexts: [
+                                      TyperAnimatedText('..',
+                                          textStyle: TextStyle(
+                                              fontSize: 16, color: primaryColor),
+                                          speed:
+                                              const Duration(milliseconds: 1000)),
+                                    ],
+                                    isRepeatingAnimation: true,
+                                    pause: const Duration(milliseconds: 200),
+                                    displayFullTextOnTap: false,
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 8),
 
-                // Animated linear progress bar
-                TweenAnimationBuilder<double>(
-                  duration: const Duration(milliseconds: 300),
-                  tween: Tween<double>(
-                    begin: 0,
-                    end: state.totalCount > 0
-                        ? state.currentCount / state.totalCount
-                        : 0,
-                  ),
-                  builder: (context, value, _) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: value,
-                          minHeight: 10,
-                          backgroundColor: Colors.grey.shade300,
-                          color: primaryColor,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                            // Animated linear progress bar
+                            TweenAnimationBuilder<double>(
+                              duration: const Duration(milliseconds: 300),
+                              tween: Tween<double>(
+                                begin: 0,
+                                end: state.totalCount > 0
+                                    ? state.currentCount / state.totalCount
+                                    : 0,
+                              ),
+                              builder: (context, value, _) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 32),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: LinearProgressIndicator(
+                                      value: value,
+                                      minHeight: 10,
+                                      backgroundColor: Colors.grey.shade300,
+                                      color: primaryColor,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
 
-                const SizedBox(height: 6),
+                            const SizedBox(height: 6),
 
-                // Progress text + percentage badge
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${state.currentCount}/${state.totalCount} completed',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: primaryColor.withAlpha(38),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '$percent%',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
+                            // Progress text + percentage badge
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '${state.currentCount}/${state.totalCount} completed',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: primaryColor.withAlpha(38),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '$percent%',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: primaryColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                        )
+                      : const SizedBox(
+                          key: ValueKey('progress_idle'),
+                          height: 12,
                         ),
-                      ),
-                    ),
-                  ],
                 ),
-                const SizedBox(height: 12),
-              ],
+              ),
               CustomButton(
                 onPressed: isInProgress ? _cancelSearch : _startSearch,
                 text: _getButtonText(state),
