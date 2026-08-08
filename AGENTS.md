@@ -60,7 +60,7 @@ No scripts, CI, Makefile, justfile. README.md = real project docs, keep in sync 
 - **Dependency injection**: GetIt. Add to `init()` in `lib/core/di/injection_container.dart`. `registerLazySingleton` for repos, data sources, use cases, services; `registerFactory` for BLoCs. Access via global `sl`. Wire: `BlocProvider(create: (_) => sl<SearchBloc>())`. `ThemeController` created + `await load()` in `init()` before registrations.
 - **Cancellation**: cooperative — `SearchCancellationToken` (in `lib/core/di/`), checked per loop iteration; set by `CancelSearchEvent`. Keep cancel checks inside long loops.
 - **Error handling**: `ErrorHandler.getErrorMessage(e)` maps errors to user copy; `ErrorHandler.logError(label, e)` from `BlocObserver.onError` + helpers. Bloc catch → `emit(SearchFailure(message))`. UI reacts per state (progress vs failure vs cancel).
-- **Persistence**: read/write `SharedPreferences` directly (no persistence layer); store raw `TextEditingController` strings for count/delay. Defaults: count `'22'`, delay `'20'`, send_daily_reminder `false`, keep_screen_on `true`, reminder 19:00, theme_mode `system`, amoled_screen_off `false`.
+- **Persistence**: read/write `SharedPreferences` directly (no persistence layer); store raw `TextEditingController` strings for count/delay. Defaults: count `'22'`, delay `'15'`, send_daily_reminder `false`, keep_screen_on `true`, reminder 19:00, theme_mode `system`, amoled_screen_off `false`.
 - **Notifications**: `NotificationService` static methods: `init()`, `scheduleDailyReminder(hour:, minute:)` (daily; id 0), `sendImmediateNotification(...)`, `cancelReminder()`. Run `init()` in `main()` before use. Timezone from `FlutterTimezone.getLocalTimezone()` + `timezone` package.
 
 ## Important Files

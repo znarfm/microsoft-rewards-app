@@ -286,7 +286,7 @@ class SearchFormState extends State<SearchForm> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _countController.text = prefs.getString('search_count') ?? '22';
-      _delayController.text = prefs.getString('search_delay') ?? '20';
+      _delayController.text = prefs.getString('search_delay') ?? '15';
     });
   }
 
