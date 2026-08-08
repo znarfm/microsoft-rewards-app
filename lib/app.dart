@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: themeController,
       builder: (context, _) {
-        final mode = themeController.mode;
+        final AppThemeMode mode = themeController.mode;
         final themeMode = switch (mode) {
           AppThemeMode.light => ThemeMode.light,
           AppThemeMode.dark || AppThemeMode.amoled => ThemeMode.dark,
@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
               darkTheme: AppTheme.dark(darkDynamic, amoled: amoled),
               themeMode: themeMode,
               debugShowCheckedModeBanner: false,
-              home: BlocProvider(
+              home: BlocProvider<SearchBloc>(
                 create: (context) => sl<SearchBloc>(),
                 child: const StartupScreen(),
               ),

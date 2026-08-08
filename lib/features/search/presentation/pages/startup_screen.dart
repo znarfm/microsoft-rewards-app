@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/preferences_service.dart';
 import '../bloc/search_bloc.dart';
 import 'login_screen.dart';
 import 'search_screen.dart';
@@ -27,11 +27,8 @@ class _StartupScreenState extends State<StartupScreen> {
     _checkLoginStatus();
   }
 
-  Future<void> _checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final loggedIn = prefs.getBool('loggedIn') ?? false;
-    if (!mounted) return;
-    setState(() => _loggedIn = loggedIn);
+  void _checkLoginStatus() {
+    setState(() => _loggedIn = sl<PreferencesService>().loggedIn);
   }
 
   @override
@@ -42,7 +39,7 @@ class _StartupScreenState extends State<StartupScreen> {
       );
     }
 
-    return BlocProvider(
+    return BlocProvider<SearchBloc>(
       create: (_) => sl<SearchBloc>(),
       child: _loggedIn! ? const SearchScreen() : const LoginScreen(),
     );

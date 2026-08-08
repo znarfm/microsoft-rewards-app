@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/strings.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/preferences_service.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../notifications/notification_service.dart';
 
@@ -30,30 +30,27 @@ class _ConfigScreenState extends State<ConfigScreen> {
     _loadSavedValues();
   }
 
-  Future<void> _loadSavedValues() async {
-    final prefs = await SharedPreferences.getInstance();
+  void _loadSavedValues() {
+    final prefs = sl<PreferencesService>();
     setState(() {
-      _sendDailyReminder = prefs.getBool('send_daily_reminder') ?? false;
-      _keepScreenOn = prefs.getBool('keep_screen_on') ?? true;
-      _showLoginReminderPopup =
-          prefs.getBool('show_login_reminder_popup') ?? true;
+      _sendDailyReminder = prefs.sendDailyReminder;
+      _keepScreenOn = prefs.keepScreenOn;
+      _showLoginReminderPopup = prefs.showLoginReminderPopup;
       _selectedTime = TimeOfDay(
-        hour: prefs.getInt('reminder_hour') ?? 19,
-        minute: prefs.getInt('reminder_minute') ?? 0,
+        hour: prefs.reminderHour,
+        minute: prefs.reminderMinute,
       );
     });
   }
 
   Future<void> _onShowLoginReminderPopupChanged(bool value) async {
     setState(() => _showLoginReminderPopup = value);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('show_login_reminder_popup', value);
+    await sl<PreferencesService>().setShowLoginReminderPopup(value);
   }
 
   Future<void> _onDailyReminderChanged(bool value) async {
     setState(() => _sendDailyReminder = value);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('send_daily_reminder', value);
+    await sl<PreferencesService>().setSendDailyReminder(value);
 
     if (value) {
       await NotificationService.scheduleDailyReminder(
@@ -73,9 +70,8 @@ class _ConfigScreenState extends State<ConfigScreen> {
     if (pickedTime == null || pickedTime == _selectedTime) return;
 
     setState(() => _selectedTime = pickedTime);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('reminder_hour', pickedTime.hour);
-    await prefs.setInt('reminder_minute', pickedTime.minute);
+    await sl<PreferencesService>()
+        .setReminderTime(pickedTime.hour, pickedTime.minute);
 
     if (_sendDailyReminder) {
       await NotificationService.scheduleDailyReminder(
@@ -87,8 +83,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
 
   Future<void> _onKeepScreenOnChanged(bool value) async {
     setState(() => _keepScreenOn = value);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('keep_screen_on', value);
+    await sl<PreferencesService>().setKeepScreenOn(value);
   }
 
   @override

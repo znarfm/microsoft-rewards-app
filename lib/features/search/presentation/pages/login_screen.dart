@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:microsoft_automatic_rewards/features/search/presentation/pages/search_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/preferences_service.dart';
 import '../bloc/search_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -127,8 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _finishLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('loggedIn', true);
+    await sl<PreferencesService>().setLoggedIn(true);
     if (mounted) {
       navigateToSearchScreen(context);
     }
@@ -139,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => BlocProvider(
+          builder: (context) => BlocProvider<SearchBloc>(
             create: (context) => sl<SearchBloc>(),
             child: const SearchScreen(),
           ),

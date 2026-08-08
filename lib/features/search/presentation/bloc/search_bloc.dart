@@ -33,13 +33,11 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
           }
         },
       );
-      if (!_cancelToken.isCancelled) {
-        emit(SearchSuccess());
-      }
+      if (_cancelToken.isCancelled) return;
+      emit(SearchSuccess());
     } catch (e) {
-      if (!_cancelToken.isCancelled) {
-        emit(SearchFailure(ErrorHandler.getErrorMessage(e)));
-      }
+      if (_cancelToken.isCancelled) return;
+      emit(SearchFailure(ErrorHandler.getErrorMessage(e)));
     }
   }
 

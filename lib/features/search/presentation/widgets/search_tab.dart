@@ -1,0 +1,104 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
+
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/constants/strings.dart';
+import '../bloc/search_bloc.dart';
+import 'search_form.dart';
+
+/// Search tab container wrapping SearchForm and listening for SearchBloc state changes.
+class SearchTab extends StatefulWidget {
+  final GlobalKey<SearchFormState>? formKey;
+  const SearchTab({super.key, this.formKey});
+
+  @override
+  State<SearchTab> createState() => _SearchTabState();
+}
+
+class _SearchTabState extends State<SearchTab> {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      child: BlocListener<SearchBloc, SearchState>(
+        listener: _handleStateChanges,
+        child: SearchForm(key: widget.formKey),
+      ),
+    );
+  }
+
+  void _handleStateChanges(BuildContext context, SearchState state) {
+    if (state is SearchFailure) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  '${Strings.searchFailed}${state.message}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+    if (state is SearchSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Text(
+                Strings.searchCompleted,
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+    if (state is SearchCancelled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.cancel_outlined, color: Colors.white),
+              SizedBox(width: 12),
+              Text(
+                Strings.searchCancelled,
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+    if (state is SearchFailure || state is SearchSuccess || state is SearchCancelled) {
+      WakelockPlus.disable();
+    }
+  }
+}

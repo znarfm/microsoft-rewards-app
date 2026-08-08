@@ -1,7 +1,6 @@
 // lib/core/constants/strings.dart
 class Strings {
   static const String appTitle = 'Reward Search Automator';
-  static const String checkingSession = 'Checking session…';
   static const String searchFailed = 'Search failed: ';
   static const String searchCompleted = 'Search completed successfully!';
   static const String searchCancelled = 'Search cancelled.';
@@ -11,7 +10,6 @@ class Strings {
   static const String delayHint = 'Enter the delay between searches';
   static const String searchInProgress = 'Cancel Search';
   static const String startSearch = 'Start Search';
-  static const String progress = 'Progress:';
 
   static const String invalidNumberError = 'Please enter a valid number between 1 and 100.';
   static const String invalidDelayError = 'Please enter a valid delay of at least 0.5 seconds.';
@@ -21,7 +19,6 @@ class Strings {
   static const String configTab = 'Config';
 
   // Config screen
-  static const String themeLabel = 'Theme';
   static const String themeSystem = 'System';
   static const String themeLight = 'Light';
   static const String themeDark = 'Dark';
@@ -35,9 +32,6 @@ class Strings {
   static const String displayLabel = 'Display & Behavior';
   static const String appLabel = 'App';
   static const String exitApp = 'Exit';
-  static const String loggedInHint =
-      'Earn points only while signed in to Bing in the search browser. '
-      'Re-check the browser if you are unsure.';
   static const String verifyLoginTitle = 'Verify Bing Sign-In';
   static const String verifyLoginContent =
       'Ensure you are signed in to your Microsoft account inside the search browser below to earn reward points.';
