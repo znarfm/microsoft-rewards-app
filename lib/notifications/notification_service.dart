@@ -16,8 +16,9 @@ class NotificationService {
     // 1) Load all the TZ database.
     tzdata.initializeTimeZones();
 
-    // 2) Figure out the device’s current zone name
-    final String nativeName = await FlutterTimezone.getLocalTimezone();
+    // 2) Figure out the device’s current IANA zone identifier
+    final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+    final String nativeName = timezoneInfo.identifier;
 
     // 3) Tell the timezone package to treat that as “local”
     final tz.Location deviceLocation = tz.getLocation(nativeName);
@@ -27,7 +28,7 @@ class NotificationService {
     // 4) Continue initializing your notifications plugin…
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     await _notifications.initialize(
-      const InitializationSettings(android: androidSettings),
+      settings: const InitializationSettings(android: androidSettings),
       onDidReceiveNotificationResponse: (_) {},
     );
 
@@ -59,11 +60,11 @@ class NotificationService {
     await _requestNotificationPermissions();
     await cancelReminder();
     await _notifications.zonedSchedule(
-      _reminderId,
-      'Reminder',
-      'Don\'t forget to run your Bing searches today!',
-      _nextInstanceOfTime(hour, minute),
-      const NotificationDetails(
+      id: _reminderId,
+      title: 'Reminder',
+      body: 'Don\'t forget to run your Bing searches today!',
+      scheduledDate: _nextInstanceOfTime(hour, minute),
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'daily_reminder_channel',
           'Daily Reminders',
@@ -82,10 +83,10 @@ class NotificationService {
     String body = 'Thank you for using our app!',
   }) async {
     await _notifications.show(
-      1, // Different ID from reminder
-      title,
-      body,
-      const NotificationDetails(
+      id: 1, // Different ID from reminder
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'daily_reminder_channel',
           'Daily Reminders',
@@ -105,6 +106,6 @@ class NotificationService {
   }
 
   static Future<void> cancelReminder() async {
-    await _notifications.cancel(_reminderId);
+    await _notifications.cancel(id: _reminderId);
   }
 }

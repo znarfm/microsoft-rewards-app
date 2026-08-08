@@ -46,7 +46,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
   }
 }
 
-abstract class SearchEvent with EquatableMixin {
+abstract class SearchEvent with Equatable {
   const SearchEvent();
 
   @override
@@ -66,7 +66,7 @@ class StartSearchEvent extends SearchEvent {
 
 class CancelSearchEvent extends SearchEvent {}
 
-abstract class SearchState with EquatableMixin {
+abstract class SearchState with Equatable {
   const SearchState();
 
   @override
