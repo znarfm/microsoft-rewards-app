@@ -38,5 +38,10 @@ class Strings {
   static const String loggedInHint =
       'Earn points only while signed in to Bing in the search browser. '
       'Re-check the browser if you are unsure.';
+  static const String verifyLoginTitle = 'Verify Bing Sign-In';
+  static const String verifyLoginContent =
+      'Ensure you are signed in to your Microsoft account inside the search browser below to earn reward points.';
+  static const String dontShowAgain = "Don't show again";
+  static const String loginReminderPopupLabel = 'Show login reminder on launch';
   static const String browserNotReady = 'Browser is not ready yet';
 }

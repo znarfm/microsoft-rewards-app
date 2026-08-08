@@ -21,6 +21,7 @@ class ConfigScreen extends StatefulWidget {
 class _ConfigScreenState extends State<ConfigScreen> {
   bool _sendDailyReminder = false;
   bool _keepScreenOn = true;
+  bool _showLoginReminderPopup = true;
   TimeOfDay _selectedTime = const TimeOfDay(hour: 19, minute: 0);
 
   @override
@@ -34,11 +35,19 @@ class _ConfigScreenState extends State<ConfigScreen> {
     setState(() {
       _sendDailyReminder = prefs.getBool('send_daily_reminder') ?? false;
       _keepScreenOn = prefs.getBool('keep_screen_on') ?? true;
+      _showLoginReminderPopup =
+          prefs.getBool('show_login_reminder_popup') ?? true;
       _selectedTime = TimeOfDay(
         hour: prefs.getInt('reminder_hour') ?? 19,
         minute: prefs.getInt('reminder_minute') ?? 0,
       );
     });
+  }
+
+  Future<void> _onShowLoginReminderPopupChanged(bool value) async {
+    setState(() => _showLoginReminderPopup = value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('show_login_reminder_popup', value);
   }
 
   Future<void> _onDailyReminderChanged(bool value) async {
@@ -163,6 +172,14 @@ class _ConfigScreenState extends State<ConfigScreen> {
                           ),
                         ],
                       ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    CheckboxListTile(
+                      value: _showLoginReminderPopup,
+                      onChanged: (value) =>
+                          _onShowLoginReminderPopupChanged(value ?? false),
+                      title: const Text(Strings.loginReminderPopupLabel),
                       controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
                     ),

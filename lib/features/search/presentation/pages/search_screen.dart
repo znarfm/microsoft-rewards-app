@@ -33,6 +33,80 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _systemUiHidden = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndShowLoginReminder();
+    });
+  }
+
+  Future<void> _checkAndShowLoginReminder() async {
+    final prefs = await SharedPreferences.getInstance();
+    final showPopup = prefs.getBool('show_login_reminder_popup') ?? true;
+    if (!showPopup || !mounted) return;
+
+    bool dontShowAgain = false;
+
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.verified_user_outlined, color: Colors.blue),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      Strings.verifyLoginTitle,
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(Strings.verifyLoginContent),
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    value: dontShowAgain,
+                    onChanged: (val) {
+                      setDialogState(() {
+                        dontShowAgain = val ?? false;
+                      });
+                    },
+                    title: const Text(Strings.dontShowAgain),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    if (dontShowAgain) {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('show_login_reminder_popup', false);
+                    }
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocListener<SearchBloc, SearchState>(
       listener: (context, state) {
@@ -162,32 +236,11 @@ class _SearchTab extends StatefulWidget {
 class _SearchTabState extends State<_SearchTab> {
   @override
   Widget build(BuildContext context) {
-    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
-
     return Padding(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
-      child: Column(
-        children: [
-          Expanded(
-            child: BlocListener<SearchBloc, SearchState>(
-              listener: _handleStateChanges,
-              child: const SearchForm(),
-            ),
-          ),
-          if (!isKeyboardVisible) const Divider(),
-          if (!isKeyboardVisible)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                Strings.loggedInHint,
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Theme.of(context).colorScheme.outline),
-              ),
-            ),
-        ],
+      child: BlocListener<SearchBloc, SearchState>(
+        listener: _handleStateChanges,
+        child: const SearchForm(),
       ),
     );
   }
