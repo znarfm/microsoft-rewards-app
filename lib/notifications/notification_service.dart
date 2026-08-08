@@ -1,10 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
-
+import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   static final _notifications = FlutterLocalNotificationsPlugin();
@@ -35,6 +34,8 @@ class NotificationService {
     await _createNotificationChannel();
   }
 
+  static const int _progressNotificationId = 2;
+
   static Future<void> _createNotificationChannel() async {
     const androidChannel = AndroidNotificationChannel(
       'daily_reminder_channel',
@@ -43,8 +44,18 @@ class NotificationService {
       importance: Importance.max,
     );
 
-    await _notifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(androidChannel);
+    const progressChannel = AndroidNotificationChannel(
+      'search_progress_channel',
+      'Search Progress',
+      description: 'Ongoing notification while search is running',
+      importance: Importance.defaultImportance,
+    );
+
+    final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+
+    await androidPlugin?.createNotificationChannel(androidChannel);
+    await androidPlugin?.createNotificationChannel(progressChannel);
   }
 
   static Future<void> _requestNotificationPermissions() async {
@@ -107,5 +118,37 @@ class NotificationService {
 
   static Future<void> cancelReminder() async {
     await _notifications.cancel(id: _reminderId);
+  }
+
+  static Future<void> showSearchProgressNotification({
+    required int current,
+    required int total,
+  }) async {
+    await _requestNotificationPermissions();
+
+    await _notifications.show(
+      id: _progressNotificationId,
+      title: 'Microsoft Automatic Rewards',
+      body: 'Search in progress ($current/$total completed)',
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          'search_progress_channel',
+          'Search Progress',
+          channelDescription: 'Ongoing notification while search is running',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+          ongoing: true,
+          onlyAlertOnce: true,
+          showProgress: true,
+          maxProgress: total,
+          progress: current,
+          icon: '@mipmap/ic_launcher',
+        ),
+      ),
+    );
+  }
+
+  static Future<void> cancelSearchProgressNotification() async {
+    await _notifications.cancel(id: _progressNotificationId);
   }
 }

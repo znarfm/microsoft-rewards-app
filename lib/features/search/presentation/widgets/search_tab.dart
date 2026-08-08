@@ -4,6 +4,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/strings.dart';
+import '../../../../notifications/notification_service.dart';
 import '../bloc/search_bloc.dart';
 import 'search_form.dart';
 
@@ -18,6 +19,12 @@ class SearchTab extends StatefulWidget {
 
 class _SearchTabState extends State<SearchTab> {
   @override
+  void dispose() {
+    NotificationService.cancelSearchProgressNotification();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -29,6 +36,12 @@ class _SearchTabState extends State<SearchTab> {
   }
 
   void _handleStateChanges(BuildContext context, SearchState state) {
+    if (state is SearchInProgress) {
+      NotificationService.showSearchProgressNotification(
+        current: state.currentCount,
+        total: state.totalCount,
+      );
+    }
     if (state is SearchFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -99,6 +112,7 @@ class _SearchTabState extends State<SearchTab> {
     }
     if (state is SearchFailure || state is SearchSuccess || state is SearchCancelled) {
       WakelockPlus.disable();
+      NotificationService.cancelSearchProgressNotification();
     }
   }
 }
