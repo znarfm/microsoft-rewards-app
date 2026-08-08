@@ -7,6 +7,7 @@ class CustomTextField extends StatelessWidget {
   final String hintText;
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
+  final bool enabled;
 
   const CustomTextField({
     super.key,
@@ -15,6 +16,7 @@ class CustomTextField extends StatelessWidget {
     required this.hintText,
     this.validator,
     this.keyboardType,
+    this.enabled = true,
   });
 
   @override
@@ -22,6 +24,7 @@ class CustomTextField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      enabled: enabled,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,

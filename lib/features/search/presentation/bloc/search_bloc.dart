@@ -28,12 +28,18 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
         cancellationToken: _cancelToken,
         controller: event.controller,
         onProgress: (currentCount, totalCount) {
-          emit(SearchInProgress(currentCount: currentCount, totalCount: event.count));
+          if (!_cancelToken.isCancelled) {
+            emit(SearchInProgress(currentCount: currentCount, totalCount: event.count));
+          }
         },
       );
-      emit(SearchSuccess());
+      if (!_cancelToken.isCancelled) {
+        emit(SearchSuccess());
+      }
     } catch (e) {
-      emit(SearchFailure(ErrorHandler.getErrorMessage(e)));
+      if (!_cancelToken.isCancelled) {
+        emit(SearchFailure(ErrorHandler.getErrorMessage(e)));
+      }
     }
   }
 
@@ -41,8 +47,8 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
       CancelSearchEvent event,
       Emitter<SearchState> emit,
       ) {
-    emit(SearchCancelled());
     _cancelToken.cancel();
+    emit(SearchCancelled());
   }
 }
 

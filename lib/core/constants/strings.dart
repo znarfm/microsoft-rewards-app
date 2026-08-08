@@ -4,6 +4,7 @@ class Strings {
   static const String checkingSession = 'Checking session…';
   static const String searchFailed = 'Search failed: ';
   static const String searchCompleted = 'Search completed successfully!';
+  static const String searchCancelled = 'Search cancelled.';
   static const String searchCountLabel = 'Search Count';
   static const String searchCountHint = 'Enter the number of searches';
   static const String delayLabel = 'Delay (seconds)';

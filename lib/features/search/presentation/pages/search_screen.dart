@@ -239,7 +239,29 @@ class _SearchTabState extends State<_SearchTab> {
         ),
       );
     }
-    if (state is SearchFailure || state is SearchSuccess) {
+    if (state is SearchCancelled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Text(
+                Strings.searchCancelled,
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+    if (state is SearchFailure || state is SearchSuccess || state is SearchCancelled) {
       WakelockPlus.disable();
     }
   }
@@ -304,129 +326,133 @@ class SearchFormState extends State<SearchForm> {
   Widget build(BuildContext context) {
     return Form(
       key: _formKey,
-      child: Column(
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: InAppWebView(
-                initialUrlRequest:
-                    URLRequest(url: WebUri("https://www.bing.com")),
-                onWebViewCreated: (controller) =>
-                    _webViewController = controller,
-                initialSettings: InAppWebViewSettings(
-                  javaScriptEnabled: true,
-                  cacheEnabled: true,
-                  incognito: false,
-                  clearSessionCache: false,
-                  clearCache: false,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: BlocBuilder<SearchBloc, SearchState>(
+        builder: (context, state) {
+          final isInProgress = state is SearchInProgress;
+          final primaryColor = Theme.of(context).colorScheme.primary;
+          final errorColor = Theme.of(context).colorScheme.error;
+          final onErrorColor = Theme.of(context).colorScheme.onError;
+
+          return Column(
             children: [
               Expanded(
-                child: CustomTextField(
-                  controller: _countController,
-                  labelText: Strings.searchCountLabel,
-                  hintText: Strings.searchCountHint,
-                  keyboardType: TextInputType.number,
-                  validator: InputValidators.validateSearchCount,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: InAppWebView(
+                    initialUrlRequest:
+                        URLRequest(url: WebUri("https://www.bing.com")),
+                    onWebViewCreated: (controller) =>
+                        _webViewController = controller,
+                    initialSettings: InAppWebViewSettings(
+                      javaScriptEnabled: true,
+                      cacheEnabled: true,
+                      incognito: false,
+                      clearSessionCache: false,
+                      clearCache: false,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: AppConstants.defaultPadding),
-              Expanded(
-                child: CustomTextField(
-                  controller: _delayController,
-                  labelText: Strings.delayLabel,
-                  hintText: Strings.delayHint,
-                  keyboardType: TextInputType.number,
-                  validator: InputValidators.validateDelay,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          BlocBuilder<SearchBloc, SearchState>(
-            builder: (context, state) {
-              final isInProgress = state is SearchInProgress;
-              return Column(
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (isInProgress) ...[
-                    // Spinner + animated dots
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Searching.',
-                          style: TextStyle(fontSize: 16, color: Colors.blue),
-                        ),
-                        AnimatedTextKit(
-                          repeatForever: true,
-                          animatedTexts: [
-                            TyperAnimatedText('..',
-                                textStyle: const TextStyle(
-                                    fontSize: 16, color: Colors.blue),
-                                speed: const Duration(milliseconds: 1000)),
-                          ],
-                          isRepeatingAnimation: true,
-                          pause: const Duration(milliseconds: 200),
-                          displayFullTextOnTap: false,
-                        ),
-                      ],
+                  Expanded(
+                    child: CustomTextField(
+                      controller: _countController,
+                      labelText: Strings.searchCountLabel,
+                      hintText: Strings.searchCountHint,
+                      keyboardType: TextInputType.number,
+                      validator: InputValidators.validateSearchCount,
+                      enabled: !isInProgress,
                     ),
-                    const SizedBox(height: 8),
-
-                    // Animated linear progress bar
-                    TweenAnimationBuilder<double>(
-                      duration: const Duration(milliseconds: 300),
-                      tween: Tween<double>(
-                        begin: 0,
-                        end: state.totalCount > 0
-                            ? state.currentCount / state.totalCount
-                            : 0,
-                      ),
-                      builder: (context, value, _) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: LinearProgressIndicator(
-                              value: value,
-                              minHeight: 10,
-                              backgroundColor: Colors.grey.shade300,
-                              color: Colors.blue,
-                            ),
-                          ),
-                        );
-                      },
+                  ),
+                  const SizedBox(width: AppConstants.defaultPadding),
+                  Expanded(
+                    child: CustomTextField(
+                      controller: _delayController,
+                      labelText: Strings.delayLabel,
+                      hintText: Strings.delayHint,
+                      keyboardType: TextInputType.number,
+                      validator: InputValidators.validateDelay,
+                      enabled: !isInProgress,
                     ),
-
-                    const SizedBox(height: 6),
-
-                    // Progress text (e.g. 4/20)
-                    Text(
-                      '${state.currentCount}/${state.totalCount} completed',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  CustomButton(
-                    onPressed: isInProgress ? _cancelSearch : _startSearch,
-                    text: _getButtonText(state),
                   ),
                 ],
-              );
-            },
-          ),
-        ],
+              ),
+              const SizedBox(height: 12),
+              if (isInProgress) ...[
+                // Spinner + animated dots
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Searching.',
+                      style: TextStyle(fontSize: 16, color: primaryColor),
+                    ),
+                    AnimatedTextKit(
+                      repeatForever: true,
+                      animatedTexts: [
+                        TyperAnimatedText('..',
+                            textStyle: TextStyle(
+                                fontSize: 16, color: primaryColor),
+                            speed: const Duration(milliseconds: 1000)),
+                      ],
+                      isRepeatingAnimation: true,
+                      pause: const Duration(milliseconds: 200),
+                      displayFullTextOnTap: false,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // Animated linear progress bar
+                TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 300),
+                  tween: Tween<double>(
+                    begin: 0,
+                    end: state.totalCount > 0
+                        ? state.currentCount / state.totalCount
+                        : 0,
+                  ),
+                  builder: (context, value, _) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: value,
+                          minHeight: 10,
+                          backgroundColor: Colors.grey.shade300,
+                          color: primaryColor,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 6),
+
+                // Progress text (e.g. 4/20)
+                Text(
+                  '${state.currentCount}/${state.totalCount} completed',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              CustomButton(
+                onPressed: isInProgress ? _cancelSearch : _startSearch,
+                text: _getButtonText(state),
+                backgroundColor: isInProgress ? errorColor : null,
+                foregroundColor: isInProgress ? onErrorColor : null,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
