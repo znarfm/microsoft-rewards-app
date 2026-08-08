@@ -57,8 +57,10 @@ class _SearchScreenState extends State<SearchScreen> {
               if (didPop) return;
               if (showOverlay) {
                 _hideOverlay();
-              } else {
+              } else if (Navigator.of(context).canPop()) {
                 Navigator.of(context).pop();
+              } else {
+                SystemNavigator.pop();
               }
             },
             child: Stack(
