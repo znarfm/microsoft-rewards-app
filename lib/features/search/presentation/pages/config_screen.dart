@@ -111,18 +111,26 @@ class _ConfigScreenState extends State<ConfigScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _sectionTitle(Strings.displayLabel),
-                    RadioGroup<AppThemeMode>(
-                      groupValue: themeController.mode,
-                      onChanged: (value) => themeController.setMode(value!),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Column(
-                        children: AppThemeMode.values.map((mode) {
-                          return RadioListTile<AppThemeMode>(
-                            value: mode,
-                            title: Text(_themeLabel(mode)),
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                          );
-                        }).toList(),
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(child: _buildThemeChip(themeController, AppThemeMode.system)),
+                              const SizedBox(width: 8),
+                              Expanded(child: _buildThemeChip(themeController, AppThemeMode.light)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(child: _buildThemeChip(themeController, AppThemeMode.dark)),
+                              const SizedBox(width: 8),
+                              Expanded(child: _buildThemeChip(themeController, AppThemeMode.amoled)),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                     const Divider(height: 24),
@@ -134,12 +142,10 @@ class _ConfigScreenState extends State<ConfigScreen> {
                       subtitle: const Text(Strings.amoledOverlayHint),
                       contentPadding: EdgeInsets.zero,
                     ),
-                    CheckboxListTile(
+                    SwitchListTile(
                       value: _keepScreenOn,
-                      onChanged: (value) =>
-                          _onKeepScreenOnChanged(value ?? false),
+                      onChanged: (value) => _onKeepScreenOnChanged(value),
                       title: const Text(Strings.keepScreenOnLabel),
-                      controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
                     ),
                   ],
@@ -157,10 +163,9 @@ class _ConfigScreenState extends State<ConfigScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _sectionTitle(Strings.remindersLabel),
-                    CheckboxListTile(
+                    SwitchListTile(
                       value: _sendDailyReminder,
-                      onChanged: (value) =>
-                          _onDailyReminderChanged(value ?? false),
+                      onChanged: (value) => _onDailyReminderChanged(value),
                       title: Row(
                         children: [
                           const Text(Strings.dailyReminderAt),
@@ -172,15 +177,13 @@ class _ConfigScreenState extends State<ConfigScreen> {
                           ),
                         ],
                       ),
-                      controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
                     ),
-                    CheckboxListTile(
+                    SwitchListTile(
                       value: _showLoginReminderPopup,
                       onChanged: (value) =>
-                          _onShowLoginReminderPopupChanged(value ?? false),
+                          _onShowLoginReminderPopupChanged(value),
                       title: const Text(Strings.loginReminderPopupLabel),
-                      controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
                     ),
                   ],
@@ -246,5 +249,32 @@ class _ConfigScreenState extends State<ConfigScreen> {
       AppThemeMode.dark => Strings.themeDark,
       AppThemeMode.amoled => Strings.themeAmoled,
     };
+  }
+
+  IconData _themeIcon(AppThemeMode mode) {
+    return switch (mode) {
+      AppThemeMode.system => Icons.brightness_auto,
+      AppThemeMode.light => Icons.light_mode,
+      AppThemeMode.dark => Icons.dark_mode,
+      AppThemeMode.amoled => Icons.contrast,
+    };
+  }
+
+  Widget _buildThemeChip(ThemeController controller, AppThemeMode mode) {
+    final isSelected = controller.mode == mode;
+    return ChoiceChip(
+      showCheckmark: false,
+      avatar: Icon(_themeIcon(mode), size: 18),
+      label: Center(
+        child: Text(
+          _themeLabel(mode),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) controller.setMode(mode);
+      },
+    );
   }
 }
