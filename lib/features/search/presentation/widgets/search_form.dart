@@ -23,6 +23,16 @@ class SearchForm extends StatefulWidget {
 }
 
 class SearchFormState extends State<SearchForm> {
+  static final URLRequest _initialBingRequest =
+      URLRequest(url: WebUri('https://www.bing.com'));
+  static final InAppWebViewSettings _webSettings = InAppWebViewSettings(
+    javaScriptEnabled: true,
+    cacheEnabled: true,
+    incognito: false,
+    clearSessionCache: false,
+    clearCache: false,
+  );
+
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _countController = TextEditingController();
   final TextEditingController _delayController = TextEditingController();
@@ -33,12 +43,12 @@ class SearchFormState extends State<SearchForm> {
     super.initState();
     saveAppOpenedToday();
     _loadSavedValues();
-    _countController.addListener(saveCountValue);
-    _delayController.addListener(saveDelayValue);
   }
 
   @override
   void dispose() {
+    saveCountValue();
+    saveDelayValue();
     _countController.dispose();
     _delayController.dispose();
     _webViewController?.dispose();
@@ -100,17 +110,10 @@ class SearchFormState extends State<SearchForm> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(11),
                     child: InAppWebView(
-                      initialUrlRequest:
-                          URLRequest(url: WebUri("https://www.bing.com")),
+                      initialUrlRequest: _initialBingRequest,
                       onWebViewCreated: (controller) =>
                           _webViewController = controller,
-                      initialSettings: InAppWebViewSettings(
-                        javaScriptEnabled: true,
-                        cacheEnabled: true,
-                        incognito: false,
-                        clearSessionCache: false,
-                        clearCache: false,
-                      ),
+                      initialSettings: _webSettings,
                     ),
                   ),
                 ),
@@ -248,6 +251,9 @@ class SearchFormState extends State<SearchForm> {
 
   Future<void> _startSearch() async {
     if (!_formKey.currentState!.validate()) return;
+
+    await saveCountValue();
+    await saveDelayValue();
 
     if (sl<PreferencesService>().keepScreenOn) {
       WakelockPlus.enable();
