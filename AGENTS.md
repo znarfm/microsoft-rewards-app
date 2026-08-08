@@ -16,8 +16,8 @@ Feature-first, clean-architecture shape. Feature code in `lib/features/`, shared
 
 - `main.dart` — entrypoint. Order matters: `await init()` (GetIt DI) → `await NotificationService.init()` → set `Bloc.observer` (`_AppBlocObserver`) → `runApp(const MyApp())`.
 - `app.dart` — `MyApp`: `DynamicColorBuilder` (wallpaper dynamic scheme Android 12+, seed `AppConstants.primary` fallback) → `AppTheme` light/dark/amoled themes → `BlocProvider`-wrapped `StartupScreen`. Mode from `ThemeController` via `ListenableBuilder`.
-- `StartupScreen` reads `loggedIn` (`SharedPreferences`) → `SearchScreen` or `LoginScreen`.
-- `LoginScreen` — Microsoft sign-in in WebView; on success write `loggedIn = true`, go to search.
+- `StartupScreen` reads `loggedIn` (`SharedPreferences`) → `SearchScreen` or `LoginScreen`. No session probing; the search tab shows a hint to verify Bing sign-in in its browser.
+- `LoginScreen` — Microsoft sign-in in WebView; the user taps **Continue** once signed in (auto URL detection is unreliable: MS redirects flicker error URLs even on success) → write `loggedIn = true`, go to search.
 - `SearchScreen` — scaffold w/ bottom `NavigationBar`, 2 tabs: Search (`_SearchTab` + `SearchForm` — count/delay, WebView, progress) + Config (`ConfigScreen` — theme, toggles, account). Dispatches `StartSearchEvent` / `CancelSearchEvent` to `SearchBloc`.
 - `SearchBloc` (`lib/features/search/presentation/bloc/search_bloc.dart`) → `PerformSearch` use case → `SearchRepositoryImpl`.
 - `SearchRepositoryImpl.performSearches` — loop `count` iterations: cancel check (`SearchCancellationToken.isCancelled`), `onProgress(i, count)`, query from `randomSentence()`, `SearchHelper.launchSearch(controller, query)` in WebView, random delay `delay ± 0..1000ms` between. Errors rethrown `Exception('Search failed: …')`.

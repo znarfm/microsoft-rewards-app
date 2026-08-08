@@ -1,6 +1,7 @@
 // lib/core/constants/strings.dart
 class Strings {
   static const String appTitle = 'Reward Search Automator';
+  static const String checkingSession = 'Checking session…';
   static const String searchFailed = 'Search failed: ';
   static const String searchCompleted = 'Search completed successfully!';
   static const String searchCountLabel = 'Search Count';
@@ -30,11 +31,10 @@ class Strings {
   static const String keepScreenOnLabel = 'Keep screen on during search';
   static const String dailyReminderAt = 'Daily reminder at ';
   static const String remindersLabel = 'Reminders';
-  static const String accountLabel = 'Account';
   static const String appLabel = 'App';
   static const String exitApp = 'Exit';
-  static const String logInToEarn = 'Log in to earn points.';
-  static const String logIn = 'Log in';
-  static const String logOut = 'Log out';
+  static const String loggedInHint =
+      'Earn points only while signed in to Bing in the search browser. '
+      'Re-check the browser if you are unsure.';
   static const String browserNotReady = 'Browser is not ready yet';
 }

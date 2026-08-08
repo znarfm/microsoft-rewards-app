@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/strings.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../notifications/notification_service.dart';
-import 'login_screen.dart';
 
 /// Second tab of the main screen. Holds the theme selector, daily-reminder
-/// and keep-screen-on toggles, the AMOLED screen-off simulation, and the
-/// Microsoft account login/logout actions.
+/// and keep-screen-on toggles, the AMOLED screen-off simulation, and app
+/// actions (exit).
 class ConfigScreen extends StatefulWidget {
   const ConfigScreen({super.key});
 
@@ -22,7 +20,6 @@ class ConfigScreen extends StatefulWidget {
 class _ConfigScreenState extends State<ConfigScreen> {
   bool _sendDailyReminder = false;
   bool _keepScreenOn = true;
-  bool _loggedIn = false;
   TimeOfDay _selectedTime = const TimeOfDay(hour: 19, minute: 0);
 
   @override
@@ -36,7 +33,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
     setState(() {
       _sendDailyReminder = prefs.getBool('send_daily_reminder') ?? false;
       _keepScreenOn = prefs.getBool('keep_screen_on') ?? true;
-      _loggedIn = prefs.getBool('loggedIn') ?? false;
       _selectedTime = TimeOfDay(
         hour: prefs.getInt('reminder_hour') ?? 19,
         minute: prefs.getInt('reminder_minute') ?? 0,
@@ -83,26 +79,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
     setState(() => _keepScreenOn = value);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('keep_screen_on', value);
-  }
-
-  void _navigateToLoginScreen() {
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-    );
-  }
-
-  Future<void> _logout() async {
-    await CookieManager.instance().deleteAllCookies();
-    await WebStorageManager.instance().deleteAllData();
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('loggedIn', false);
-
-    if (mounted) {
-      _navigateToLoginScreen();
-    }
   }
 
   @override
@@ -161,23 +137,6 @@ children: [
               controlAffinity: ListTileControlAffinity.leading,
               contentPadding: EdgeInsets.zero,
             ),
-            const Divider(height: 32),
-            _sectionTitle(Strings.accountLabel),
-            if (_loggedIn)
-              ListTile(
-                leading: const Icon(Icons.logout),
-                title: const Text(Strings.logOut),
-                onTap: _logout,
-                contentPadding: EdgeInsets.zero,
-              )
-            else
-              ListTile(
-                leading: const Icon(Icons.warning_amber, color: Colors.orange),
-                title: const Text(Strings.logIn),
-                subtitle: const Text(Strings.logInToEarn),
-                onTap: _navigateToLoginScreen,
-                contentPadding: EdgeInsets.zero,
-              ),
             const Divider(height: 32),
             _sectionTitle(Strings.appLabel),
             ListTile(

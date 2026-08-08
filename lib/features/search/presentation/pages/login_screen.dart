@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:microsoft_automatic_rewards/features/search/presentation/pages/search_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/di/injection_container.dart';
 import '../bloc/search_bloc.dart';
 
@@ -94,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Expanded(
                 child: InAppWebView(
                   initialUrlRequest: URLRequest(
-                    url: WebUri("https://login.live.com/login.srf?wa=wsignin1.0&id=264960&wreply=https%3A%2F%2Fwww.bing.com%2Fsecure%2FPassport.aspx&wp=MBI_SSL"),
+                    url: WebUri(AppConstants.loginUrl),
                   ),
                   initialSettings: InAppWebViewSettings(
                     javaScriptEnabled: true,
@@ -103,15 +104,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     clearSessionCache: false,
                     clearCache: false,
                   ),
-                  onLoadStop: (controller, url) async {
-                    if (url != null && url.host.contains("www.bing.com")) {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool("loggedIn", true);
-                      if (context.mounted) {
-                        navigateToSearchScreen(context);
-                      }
-                    }
-                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Sign-in success is confirmed by the user: they sign in inside
+              // the WebView (which returns to Bing) and tap Continue. No URL
+              // heuristics — Microsoft's redirect chain flickers error URLs
+              // even on successful logins.
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _finishLogin,
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text('Continue'),
                 ),
               ),
             ],
@@ -119,6 +124,14 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _finishLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('loggedIn', true);
+    if (mounted) {
+      navigateToSearchScreen(context);
+    }
   }
 
   void navigateToSearchScreen(BuildContext context) {

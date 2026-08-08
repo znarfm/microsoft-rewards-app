@@ -47,7 +47,7 @@ flutter pub get
 flutter run
 ```
 
-The app opens to a login screen. Sign in with your Microsoft account (`login.live.com`) and you are taken to the search screen.
+The app opens to a login screen. Sign in with your Microsoft account in the embedded browser; once it returns to Bing signed in, tap **Continue** and you are taken to the search screen.
 
 ## Usage
 
@@ -69,7 +69,7 @@ All settings live in the **Config** tab (bottom-right of the search screen).
 | Simulate screen off | On/Off | While on, starts a search‑time pure-black overlay that hides the UI — looks like a powered-off display on OLED; tap or press back to wake it for the current run (the toggle stays on, so the next search dims again) |
 | Daily reminder | On/Off + time | Schedules a daily local notification at the chosen time, timezone-aware |
 | Keep screen on | On (default) | Acquires a wake lock while searching so the screen stays awake |
-| Account | Log in / Log out | Signs you in or clears accounts and cookies (cookies and local storage are wiped on log out) |
+- **Settings persisted** - theme, reminders, and search preferences survive restarts
 
 Theme and overlay choices are persisted via `SharedPreferences` under `theme_mode` and `amoled_screen_off` keys (defaults: `system` / `false`).
 
@@ -112,7 +112,7 @@ State management uses `flutter_bloc` (search flow: `SearchInProgress` → `Searc
 
 ## Troubleshooting
 
-- **Search does not start** - make sure you are logged in on the search screen (`Config` tab → account row) and that the web view loaded Bing before pressing Start.
+- **Search does not start** - make sure the search screen's browser shows you signed in to Bing (hint under the form) before pressing Start.
 - **No points awarded after a run** - Bing may batch or delay rewards, or duplicate queries may not count. Increase delay and vary counts.
 - **Login stuck** - log out from the Config tab (clears cookies), then sign in again.
 - **Dynamic colors missing** - Material You only works on Android 12+; older devices fall back to the branded seed color.

@@ -177,6 +177,18 @@ class _SearchTabState extends State<_SearchTab> {
                 ),
               ),
               if (!isKeyboardVisible) const Divider(),
+              if (!isKeyboardVisible)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    Strings.loggedInHint,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: Theme.of(context).colorScheme.outline),
+                  ),
+                ),
               const SizedBox(height: 48), // Reserve space for the bottom row
             ],
           ),
