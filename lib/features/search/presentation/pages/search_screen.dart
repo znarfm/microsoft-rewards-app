@@ -62,77 +62,64 @@ class _SearchScreenState extends State<SearchScreen> {
               !_overlayDismissed;
           final showOverlay = state is SearchInProgress && overlayOn;
 
-          return PopScope(
-            canPop: false,
-            onPopInvokedWithResult: (didPop, result) async {
-              if (didPop) return;
-              if (showOverlay) {
-                _hideOverlay();
-                return;
-              }
+          final contentStack = Stack(
+            children: [
+              Scaffold(
+                appBar: AppBar(
+                  title: const Text(Strings.appTitle),
+                ),
+                body: IndexedStack(
+                  index: _tabIndex,
+                  children: [
+                    SearchTab(formKey: _searchFormKey),
+                    const ConfigScreen(),
+                  ],
+                ),
+                bottomNavigationBar: NavigationBar(
+                  selectedIndex: _tabIndex,
+                  onDestinationSelected: (index) {
+                    if (index == 0 && _tabIndex == 0) {
+                      _searchFormKey.currentState?.triggerSearchAction();
+                    } else {
+                      setState(() => _tabIndex = index);
+                    }
+                  },
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.search),
+                      label: Strings.searchTab,
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.settings),
+                      label: Strings.configTab,
+                    ),
+                  ],
+                ),
+              ),
 
-              // On Search tab: navigate back in WebView history if possible
-              if (_tabIndex == 0) {
-                final handledByWebView =
-                    await _searchFormKey.currentState?.handleBackPress() ??
-                        false;
-                if (handledByWebView) return;
-              }
-
-              if (!context.mounted) return;
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
-              } else {
-                SystemNavigator.pop();
-              }
-            },
-            child: Stack(
-              children: [
-                Scaffold(
-                  appBar: AppBar(
-                    title: const Text(Strings.appTitle),
-                  ),
-                  body: IndexedStack(
-                    index: _tabIndex,
-                    children: [
-                      SearchTab(formKey: _searchFormKey),
-                      const ConfigScreen(),
-                    ],
-                  ),
-                  bottomNavigationBar: NavigationBar(
-                    selectedIndex: _tabIndex,
-                    onDestinationSelected: (index) {
-                      if (index == 0 && _tabIndex == 0) {
-                        _searchFormKey.currentState?.triggerSearchAction();
-                      } else {
-                        setState(() => _tabIndex = index);
-                      }
-                    },
-                    destinations: const [
-                      NavigationDestination(
-                        icon: Icon(Icons.search),
-                        label: Strings.searchTab,
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.settings),
-                        label: Strings.configTab,
-                      ),
-                    ],
+              // Pure-black AMOLED overlay while search runs (if enabled).
+              if (showOverlay)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: _hideOverlay,
+                    behavior: HitTestBehavior.opaque,
+                    child: const ColoredBox(color: Colors.black),
                   ),
                 ),
-
-                // Pure-black AMOLED overlay while search runs (if enabled).
-                if (showOverlay)
-                  Positioned.fill(
-                    child: GestureDetector(
-                      onTap: _hideOverlay,
-                      behavior: HitTestBehavior.opaque,
-                      child: const ColoredBox(color: Colors.black),
-                    ),
-                  ),
-              ],
-            ),
+            ],
           );
+
+          if (showOverlay) {
+            return PopScope(
+              canPop: false,
+              onPopInvokedWithResult: (didPop, result) {
+                if (!didPop) _hideOverlay();
+              },
+              child: contentStack,
+            );
+          }
+
+          return contentStack;
         },
       ),
     );
