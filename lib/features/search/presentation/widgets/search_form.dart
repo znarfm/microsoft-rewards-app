@@ -55,6 +55,14 @@ class SearchFormState extends State<SearchForm> {
     super.dispose();
   }
 
+  Future<bool> handleBackPress() async {
+    if (_webViewController != null && await _webViewController!.canGoBack()) {
+      await _webViewController!.goBack();
+      return true;
+    }
+    return false;
+  }
+
   Future<void> saveAppOpenedToday() async {
     await sl<PreferencesService>().saveAppOpenedToday();
   }

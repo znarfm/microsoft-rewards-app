@@ -68,7 +68,19 @@ class _SearchScreenState extends State<SearchScreen> {
               if (didPop) return;
               if (showOverlay) {
                 _hideOverlay();
-              } else if (Navigator.of(context).canPop()) {
+                return;
+              }
+
+              // On Search tab: navigate back in WebView history if possible
+              if (_tabIndex == 0) {
+                final handledByWebView =
+                    await _searchFormKey.currentState?.handleBackPress() ??
+                        false;
+                if (handledByWebView) return;
+              }
+
+              if (!context.mounted) return;
+              if (Navigator.of(context).canPop()) {
                 Navigator.of(context).pop();
               } else {
                 SystemNavigator.pop();
