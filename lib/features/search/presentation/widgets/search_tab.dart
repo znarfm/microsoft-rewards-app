@@ -17,11 +17,39 @@ class SearchTab extends StatefulWidget {
   State<SearchTab> createState() => _SearchTabState();
 }
 
-class _SearchTabState extends State<SearchTab> {
+class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
+  bool _isAppInFocus = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     NotificationService.cancelSearchProgressNotification();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _isAppInFocus = (state == AppLifecycleState.resumed);
+    final searchBloc = context.read<SearchBloc>();
+    final currentSearchState = searchBloc.state;
+
+    if (currentSearchState is SearchInProgress) {
+      if (!_isAppInFocus) {
+        NotificationService.showSearchProgressNotification(
+          current: currentSearchState.currentCount,
+          total: currentSearchState.totalCount,
+          remainingSeconds: currentSearchState.remainingSeconds,
+        );
+      } else {
+        NotificationService.cancelSearchProgressNotification();
+      }
+    }
   }
 
   @override
@@ -37,10 +65,15 @@ class _SearchTabState extends State<SearchTab> {
 
   void _handleStateChanges(BuildContext context, SearchState state) {
     if (state is SearchInProgress) {
-      NotificationService.showSearchProgressNotification(
-        current: state.currentCount,
-        total: state.totalCount,
-      );
+      if (!_isAppInFocus) {
+        NotificationService.showSearchProgressNotification(
+          current: state.currentCount,
+          total: state.totalCount,
+          remainingSeconds: state.remainingSeconds,
+        );
+      } else {
+        NotificationService.cancelSearchProgressNotification();
+      }
     }
     if (state is SearchFailure) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -5,6 +5,20 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../core/di/injection_container.dart';
+import '../features/search/presentation/bloc/search_bloc.dart';
+
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse response) {
+  if (response.actionId == 'stop_search') {
+    try {
+      sl<SearchBloc>().add(CancelSearchEvent());
+    } catch (e) {
+      debugPrint('Background notification stop error: $e');
+    }
+  }
+}
+
 class NotificationService {
   static final _notifications = FlutterLocalNotificationsPlugin();
   static const int _reminderId = 0;
@@ -28,7 +42,16 @@ class NotificationService {
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     await _notifications.initialize(
       settings: const InitializationSettings(android: androidSettings),
-      onDidReceiveNotificationResponse: (_) {},
+      onDidReceiveNotificationResponse: (response) {
+        if (response.actionId == 'stop_search') {
+          try {
+            sl<SearchBloc>().add(CancelSearchEvent());
+          } catch (e) {
+            debugPrint('Error stopping search via notification: $e');
+          }
+        }
+      },
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
     await _createNotificationChannel();
@@ -123,13 +146,16 @@ class NotificationService {
   static Future<void> showSearchProgressNotification({
     required int current,
     required int total,
+    int remainingSeconds = 0,
   }) async {
     await _requestNotificationPermissions();
 
+    final percent = total > 0 ? ((current / total) * 100).round() : 0;
+
     await _notifications.show(
       id: _progressNotificationId,
-      title: 'Microsoft Automatic Rewards',
-      body: 'Search in progress ($current/$total completed)',
+      title: 'Bing Search Automation',
+      body: '$current/$total completed ($percent%)',
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           'search_progress_channel',
@@ -138,11 +164,22 @@ class NotificationService {
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
           ongoing: true,
+          autoCancel: false,
           onlyAlertOnce: true,
           showProgress: true,
           maxProgress: total,
           progress: current,
+          subText: '$percent%',
+          category: AndroidNotificationCategory.progress,
           icon: '@mipmap/ic_launcher',
+          actions: const [
+            AndroidNotificationAction(
+              'stop_search',
+              'Stop',
+              cancelNotification: true,
+              showsUserInterface: true,
+            ),
+          ],
         ),
       ),
     );
