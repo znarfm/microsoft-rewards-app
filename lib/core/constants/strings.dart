@@ -31,6 +31,8 @@ class Strings {
   static const String dailyReminderAt = 'Daily reminder at ';
   static const String remindersLabel = 'Reminders';
   static const String accountLabel = 'Account';
+  static const String appLabel = 'App';
+  static const String exitApp = 'Exit';
   static const String logInToEarn = 'Log in to earn points.';
   static const String logIn = 'Log in';
   static const String logOut = 'Log out';

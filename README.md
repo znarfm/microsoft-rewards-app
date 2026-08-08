@@ -66,7 +66,7 @@ All settings live in the **Config** tab (bottom-right of the search screen).
 | Setting | Options | Description |
 | --- | --- | --- |
 | Theme | System / Light / Dark / AMOLED | `AMOLED` turns every surface pure black (`#000000`) for OLED screens. `System` follows the device's dark/light preference |
-| Simulate screen off | On/Off | While on, starts a search‑time pure-black overlay that hides the UI — looks like a powered-off display on OLED; tap or press back to dismiss |
+| Simulate screen off | On/Off | While on, starts a search‑time pure-black overlay that hides the UI — looks like a powered-off display on OLED; tap or press back to wake it for the current run (the toggle stays on, so the next search dims again) |
 | Daily reminder | On/Off + time | Schedules a daily local notification at the chosen time, timezone-aware |
 | Keep screen on | On (default) | Acquires a wake lock while searching so the screen stays awake |
 | Account | Log in / Log out | Signs you in or clears accounts and cookies (cookies and local storage are wiped on log out) |

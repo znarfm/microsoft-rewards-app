@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -177,6 +178,14 @@ children: [
                 onTap: _navigateToLoginScreen,
                 contentPadding: EdgeInsets.zero,
               ),
+            const Divider(height: 32),
+            _sectionTitle(Strings.appLabel),
+            ListTile(
+              leading: const Icon(Icons.power_settings_new),
+              title: const Text(Strings.exitApp),
+              onTap: () => SystemNavigator.pop(),
+              contentPadding: EdgeInsets.zero,
+            ),
           ],
         );
       },

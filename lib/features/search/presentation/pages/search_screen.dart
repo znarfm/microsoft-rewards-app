@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
@@ -26,70 +27,129 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   int _tabIndex = 0;
+  // Session-only: dismissing the overlay (tap/back) must NOT flip the
+  // persisted toggle — it comes back on the next search.
+  bool _overlayDismissed = false;
+  bool _systemUiHidden = false;
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final state = context.read<SearchBloc>().state;
-        final controller = sl<ThemeController>();
-        if (state is SearchInProgress && controller.amoledOverlay) {
-          await controller.setAmoledOverlay(false);
-        } else {
-          Navigator.of(context).pop();
+    return BlocListener<SearchBloc, SearchState>(
+      listener: (context, state) {
+        // A brand-new search (0/0 progress) re-arms the overlay.
+        if (state is SearchInProgress &&
+            state.currentCount == 0 &&
+            state.totalCount == 0 &&
+            _overlayDismissed) {
+          setState(() => _overlayDismissed = false);
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Builder(
-            builder: (context) {
-              final isSmallScreen = MediaQuery.of(context).size.width < 365;
-              return isSmallScreen
-                  ? const Text(Strings.appTitle)
-                  : Row(
-                      children: [
-                        Image.asset(
-                          'assets/images/auto_search.png',
-                          height: 32,
-                        ),
-                        const SizedBox(width: 10),
-                        const Text(Strings.appTitle),
-                      ],
-                    );
+      child: BlocBuilder<SearchBloc, SearchState>(
+        builder: (context, state) {
+          final overlayOn =
+              sl<ThemeController>().amoledOverlay && !_overlayDismissed;
+          final showOverlay = state is SearchInProgress && overlayOn;
+          _applySystemUi(showOverlay);
+
+          return PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) async {
+              if (didPop) return;
+              if (showOverlay) {
+                _hideOverlay();
+              } else {
+                Navigator.of(context).pop();
+              }
             },
-          ),
-        ),
-        body: IndexedStack(
-          index: _tabIndex,
-          children: const [
-            _SearchTab(),
-            ConfigScreen(),
-          ],
-        ),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _tabIndex,
-          onDestinationSelected: (index) => setState(() => _tabIndex = index),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.search),
-              label: Strings.searchTab,
+            child: Stack(
+              children: [
+                Scaffold(
+                  appBar: AppBar(
+                    title: Builder(
+                      builder: (context) {
+                        final isSmallScreen =
+                            MediaQuery.of(context).size.width < 365;
+                        return isSmallScreen
+                            ? const Text(Strings.appTitle)
+                            : Row(
+                                children: [
+                                  Image.asset(
+                                    'assets/images/auto_search.png',
+                                    height: 32,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text(Strings.appTitle),
+                                ],
+                              );
+                      },
+                    ),
+                  ),
+                  body: IndexedStack(
+                      index: _tabIndex,
+                      children: const [
+                        _SearchTab(),
+                        ConfigScreen(),
+                      ],
+                    ),
+                    bottomNavigationBar: NavigationBar(
+                      selectedIndex: _tabIndex,
+                      onDestinationSelected: (index) =>
+                          setState(() => _tabIndex = index),
+                      destinations: const [
+                        NavigationDestination(
+                          icon: Icon(Icons.search),
+                          label: Strings.searchTab,
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.settings),
+                          label: Strings.configTab,
+                        ),
+                      ],
+                    ),
+                  ),
+                // Full-screen AMOLED "screen off" simulation: covers the
+                // entire UI (app bar, nav bar, content). Tap or back wakes
+                // it for this search only; the persisted toggle stays on.
+                if (showOverlay)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _hideOverlay,
+                      child: const ColoredBox(color: Colors.black),
+                    ),
+                  ),
+              ],
             ),
-            NavigationDestination(
-              icon: Icon(Icons.settings),
-              label: Strings.configTab,
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
+
+  void _hideOverlay() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    _applySystemUi(false);
+    setState(() => _overlayDismissed = true);
+  }
+
+  void _applySystemUi(bool visible) {
+    if (visible == _systemUiHidden) return;
+    _systemUiHidden = visible;
+    Future(() => SystemChrome.setEnabledSystemUIMode(
+        visible ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge));
+  }
+
+  @override
+  void dispose() {
+    if (_systemUiHidden) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
+    super.dispose();
+  }
 }
 
-/// Search tab content: inputs, WebView, progress, and the AMOLED
-/// screen-off simulation overlay (pure black while a search is running and
-/// the overlay toggle is on).
+/// Search tab content: inputs, WebView, and progress. The AMOLED
+/// screen-off overlay lives at the shell level (covers the full UI).
 class _SearchTab extends StatefulWidget {
   const _SearchTab();
 
@@ -104,60 +164,46 @@ class _SearchTabState extends State<_SearchTab> {
   Widget build(BuildContext context) {
     final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
 
-    return BlocBuilder<SearchBloc, SearchState>(
-      builder: (context, state) {
-        final showOverlay = state is SearchInProgress &&
-            sl<ThemeController>().amoledOverlay;
-        return Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(AppConstants.defaultPadding),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: BlocListener<SearchBloc, SearchState>(
-                      listener: _handleStateChanges,
-                      child: SearchForm(key: _searchFormKey),
-                    ),
-                  ),
-                  if (!isKeyboardVisible) const Divider(),
-                  const SizedBox(height: 48), // Reserve space for the bottom row
-                ],
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(AppConstants.defaultPadding),
+          child: Column(
+            children: [
+              Expanded(
+                child: BlocListener<SearchBloc, SearchState>(
+                  listener: _handleStateChanges,
+                  child: SearchForm(key: _searchFormKey),
+                ),
               ),
+              if (!isKeyboardVisible) const Divider(),
+              const SizedBox(height: 48), // Reserve space for the bottom row
+            ],
+          ),
+        ),
+        // Bottom row positioned
+        if (!isKeyboardVisible)
+          Positioned(
+            bottom: 12,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () => openInWebView(
+                      'https://svitspindler.com/microsoft-automatic-rewards'),
+                  child: const Text('Help'),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      openInWebView('https://rewards.bing.com/'),
+                  child: const Text('Rewards'),
+                ),
+              ],
             ),
-            // Bottom row positioned
-            if (!isKeyboardVisible)
-              Positioned(
-                bottom: 12,
-                left: 0,
-                right: 0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed: () => openInWebView(
-                          'https://svitspindler.com/microsoft-automatic-rewards'),
-                      child: const Text('Help'),
-                    ),
-                    TextButton(
-                      onPressed: () =>
-                          openInWebView('https://rewards.bing.com/'),
-                      child: const Text('Rewards'),
-                    ),
-                  ],
-                ),
-              ),
-            if (showOverlay)
-              Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => sl<ThemeController>().setAmoledOverlay(false),
-                  child: const ColoredBox(color: Colors.black),
-                ),
-              ),
-          ],
-        );
-      },
+          ),
+      ],
     );
   }
 
