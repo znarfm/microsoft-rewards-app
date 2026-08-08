@@ -78,24 +78,7 @@ class _SearchScreenState extends State<SearchScreen> {
               children: [
                 Scaffold(
                   appBar: AppBar(
-                    title: Builder(
-                      builder: (context) {
-                        final isSmallScreen =
-                            MediaQuery.of(context).size.width < 365;
-                        return isSmallScreen
-                            ? const Text(Strings.appTitle)
-                            : Row(
-                                children: [
-                                  Image.asset(
-                                    'assets/images/auto_search.png',
-                                    height: 32,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const Text(Strings.appTitle),
-                                ],
-                              );
-                      },
-                    ),
+                    title: const Text(Strings.appTitle),
                   ),
                   body: IndexedStack(
                     index: _tabIndex,

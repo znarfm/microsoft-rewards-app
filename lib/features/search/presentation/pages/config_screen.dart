@@ -97,9 +97,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
               margin: const EdgeInsets.only(bottom: 16),
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -113,17 +110,25 @@ class _ConfigScreenState extends State<ConfigScreen> {
                         children: [
                           Row(
                             children: [
-                              Expanded(child: _buildThemeChip(themeController, AppThemeMode.system)),
+                              Expanded(
+                                  child: _buildThemeChip(
+                                      context, themeController, AppThemeMode.system)),
                               const SizedBox(width: 8),
-                              Expanded(child: _buildThemeChip(themeController, AppThemeMode.light)),
+                              Expanded(
+                                  child: _buildThemeChip(
+                                      context, themeController, AppThemeMode.light)),
                             ],
                           ),
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Expanded(child: _buildThemeChip(themeController, AppThemeMode.dark)),
+                              Expanded(
+                                  child: _buildThemeChip(
+                                      context, themeController, AppThemeMode.dark)),
                               const SizedBox(width: 8),
-                              Expanded(child: _buildThemeChip(themeController, AppThemeMode.amoled)),
+                              Expanded(
+                                  child: _buildThemeChip(
+                                      context, themeController, AppThemeMode.amoled)),
                             ],
                           ),
                         ],
@@ -161,9 +166,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
               ),
             ),
             Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
               margin: const EdgeInsets.only(bottom: 16),
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -199,9 +201,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
               ),
             ),
             Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
               margin: const EdgeInsets.only(bottom: 16),
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -217,6 +216,12 @@ class _ConfigScreenState extends State<ConfigScreen> {
                       onTap: () => InAppBrowser.openWithSystemBrowser(
                         url: WebUri('https://github.com/znarfm'),
                       ),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: const Text('Version'),
+                      subtitle: const Text('1.2.0+14'),
                       contentPadding: EdgeInsets.zero,
                     ),
                     ListTile(
@@ -268,18 +273,40 @@ class _ConfigScreenState extends State<ConfigScreen> {
     };
   }
 
-  Widget _buildThemeChip(ThemeController controller, AppThemeMode mode) {
+  Widget _buildThemeChip(
+      BuildContext context, ThemeController controller, AppThemeMode mode) {
     final isSelected = controller.mode == mode;
+    final colorScheme = Theme.of(context).colorScheme;
     return ChoiceChip(
       showCheckmark: false,
-      avatar: Icon(_themeIcon(mode), size: 18),
+      avatar: Icon(
+        _themeIcon(mode),
+        size: 18,
+        color: isSelected
+            ? colorScheme.onPrimaryContainer
+            : colorScheme.onSurfaceVariant,
+      ),
       label: Center(
         child: Text(
           _themeLabel(mode),
           overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected
+                ? colorScheme.onPrimaryContainer
+                : colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
       selected: isSelected,
+      selectedColor: colorScheme.primaryContainer,
+      backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+      side: BorderSide(
+        color: isSelected
+            ? colorScheme.primary.withAlpha(180)
+            : colorScheme.outlineVariant.withAlpha(140),
+        width: isSelected ? 1.5 : 1,
+      ),
       onSelected: (selected) {
         if (selected) controller.setMode(mode);
       },

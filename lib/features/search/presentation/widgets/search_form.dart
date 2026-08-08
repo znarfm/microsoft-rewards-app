@@ -212,8 +212,11 @@ class SearchFormState extends State<SearchForm> {
                                     child: LinearProgressIndicator(
                                       value: value,
                                       minHeight: 10,
-                                      backgroundColor: Colors.grey.shade300,
+                                      backgroundColor: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest,
                                       color: primaryColor,
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
                                 );

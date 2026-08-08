@@ -22,9 +22,9 @@ class CustomButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: AppConstants.defaultButtonHeight,
-      child: ElevatedButton(
+      child: FilledButton(
         style: (backgroundColor != null || foregroundColor != null)
-            ? ElevatedButton.styleFrom(
+            ? FilledButton.styleFrom(
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor,
               )
@@ -32,10 +32,10 @@ class CustomButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         child: isLoading
             ? const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
             : Text(text),
       ),
     );

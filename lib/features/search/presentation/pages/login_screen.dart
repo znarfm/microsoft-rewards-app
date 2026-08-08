@@ -19,104 +19,127 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Login to Microsoft Account")),
+      appBar: AppBar(
+        title: const Text("Login to Microsoft Account"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             if (!_showWebView) ...[
               Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                margin: const EdgeInsets.symmetric(horizontal: 16),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(24),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Image.asset(
-                        'assets/images/auto_search.png',
-                        height: 40,
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.stars_rounded,
+                          size: 48,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      const Text(
+                      const SizedBox(height: 20),
+                      Text(
                         "Automate your daily web searches to collect reward points",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
                         ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         "Sign in with your existing rewards account to run automated searches.\n"
-                            "Customizable number of searches and delays.\n"
-                            "Use your collected points as usual for gift cards, donations, or game credits.",
+                        "Customizable number of searches and delays.\n"
+                        "Use your collected points as usual for gift cards, donations, or game credits.",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: colorScheme.onSurfaceVariant,
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
-                      ElevatedButton.icon(
+                      FilledButton.icon(
                         onPressed: () {
                           setState(() {
                             _showWebView = true;
                           });
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        icon: const Icon(Icons.login),
                         label: const Text(
                           "Sign In",
-                          style: TextStyle(fontSize: 16),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-            const Spacer(),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextButton(
-                  onPressed: () => showConfirmPopup(context),
-                  child: const Text(
+              const Spacer(),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextButton(
+                    onPressed: () => showConfirmPopup(context),
+                    child: const Text(
                       "Skip for now",
-                      style: TextStyle(fontSize: 16, color: Colors.blue)
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
               ),
-            ),
             ] else ...[
               Expanded(
-                child: InAppWebView(
-                  initialUrlRequest: URLRequest(
-                    url: WebUri(AppConstants.loginUrl),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withAlpha(100),
+                    ),
                   ),
-                  initialSettings: InAppWebViewSettings(
-                    javaScriptEnabled: true,
-                    cacheEnabled: true,
-                    incognito: false,
-                    clearSessionCache: false,
-                    clearCache: false,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(19),
+                    child: RepaintBoundary(
+                      child: InAppWebView(
+                        initialUrlRequest: URLRequest(
+                          url: WebUri(AppConstants.loginUrl),
+                        ),
+                        initialSettings: InAppWebViewSettings(
+                          javaScriptEnabled: true,
+                          cacheEnabled: true,
+                          incognito: false,
+                          clearSessionCache: false,
+                          clearCache: false,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              // Sign-in success is confirmed by the user: they sign in inside
-              // the WebView (which returns to Bing) and tap Continue. No URL
-              // heuristics — Microsoft's redirect chain flickers error URLs
-              // even on successful logins.
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
+                child: FilledButton.icon(
                   onPressed: _finishLogin,
                   icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('Continue'),
+                  label: const Text(
+                    'Continue',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ],
@@ -153,7 +176,8 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text("Skip Login for now?"),
-          content: const Text("You won't be able to earn points until you login. Are you sure you want to skip?"),
+          content: const Text(
+              "You won't be able to earn points until you login. Are you sure you want to skip?"),
           actions: [
             TextButton(
               onPressed: () {
@@ -161,9 +185,8 @@ class _LoginScreenState extends State<LoginScreen> {
               },
               child: const Text("Cancel"),
             ),
-            TextButton(
+            FilledButton(
               onPressed: () {
-                // Handle logout logic here
                 Navigator.of(context).pop();
                 navigateToSearchScreen(context);
               },
@@ -172,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         );
       },
-      barrierDismissible: true
+      barrierDismissible: true,
     );
   }
 }

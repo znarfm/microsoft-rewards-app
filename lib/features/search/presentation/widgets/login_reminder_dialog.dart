@@ -16,24 +16,25 @@ Future<void> showLoginReminderDialog(BuildContext context) async {
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setDialogState) {
+          final colorScheme = Theme.of(context).colorScheme;
           return AlertDialog(
-            title: const Row(
-              children: [
-                Icon(Icons.verified_user_outlined, color: Colors.blue),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    Strings.verifyLoginTitle,
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ),
-              ],
+            icon: Icon(
+              Icons.verified_user_rounded,
+              color: colorScheme.primary,
+              size: 28,
+            ),
+            title: const Text(
+              Strings.verifyLoginTitle,
+              textAlign: TextAlign.center,
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(Strings.verifyLoginContent),
+                const Text(
+                  Strings.verifyLoginContent,
+                  style: TextStyle(fontSize: 14),
+                ),
                 const SizedBox(height: 12),
                 CheckboxListTile(
                   value: dontShowAgain,
@@ -42,7 +43,10 @@ Future<void> showLoginReminderDialog(BuildContext context) async {
                       dontShowAgain = val ?? false;
                     });
                   },
-                  title: const Text(Strings.dontShowAgain),
+                  title: const Text(
+                    Strings.dontShowAgain,
+                    style: TextStyle(fontSize: 14),
+                  ),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
                   dense: true,
@@ -50,7 +54,7 @@ Future<void> showLoginReminderDialog(BuildContext context) async {
               ],
             ),
             actions: [
-              TextButton(
+              FilledButton(
                 onPressed: () async {
                   if (dontShowAgain) {
                     await sl<PreferencesService>()
