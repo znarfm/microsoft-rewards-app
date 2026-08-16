@@ -25,13 +25,19 @@ class SearchForm extends StatefulWidget {
 class SearchFormState extends State<SearchForm> {
   static final URLRequest _initialBingRequest =
       URLRequest(url: WebUri('https://www.bing.com'));
-  static final InAppWebViewSettings _webSettings = InAppWebViewSettings(
-    javaScriptEnabled: true,
-    cacheEnabled: true,
-    incognito: false,
-    clearSessionCache: false,
-    clearCache: false,
-  );
+
+  InAppWebViewSettings _getWebSettings() {
+    final dataSaver = sl<PreferencesService>().dataSaver;
+    return InAppWebViewSettings(
+      javaScriptEnabled: true,
+      cacheEnabled: true,
+      incognito: false,
+      clearSessionCache: false,
+      clearCache: false,
+      blockNetworkImage: dataSaver,
+      mediaPlaybackRequiresUserGesture: true,
+    );
+  }
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _countController = TextEditingController();
@@ -122,7 +128,7 @@ class SearchFormState extends State<SearchForm> {
                         initialUrlRequest: _initialBingRequest,
                         onWebViewCreated: (controller) =>
                             _webViewController = controller,
-                        initialSettings: _webSettings,
+                        initialSettings: _getWebSettings(),
                       ),
                     ),
                   ),

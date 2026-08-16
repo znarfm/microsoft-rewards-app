@@ -18,6 +18,54 @@ class PreferencesService {
   static const String keyLastOpenedDate = 'last_opened_date';
   static const String keyThemeMode = 'theme_mode';
   static const String keyAmoledOverlay = 'amoled_screen_off';
+  static const String keyDataSaver = 'data_saver';
+  static const String keyCompletionStreak = 'completion_streak';
+  static const String keyLastCompletedDate = 'last_completed_date';
+  static const String keyHapticFeedback = 'haptic_feedback';
+
+  // Data Saver (blocks images in WebView to save data & speed up searches)
+  bool get dataSaver => _prefs.getBool(keyDataSaver) ?? true;
+  Future<bool> setDataSaver(bool value) =>
+      _prefs.setBool(keyDataSaver, value);
+
+  // Haptic Feedback
+  bool get hapticFeedback => _prefs.getBool(keyHapticFeedback) ?? true;
+  Future<bool> setHapticFeedback(bool value) =>
+      _prefs.setBool(keyHapticFeedback, value);
+
+  // Completion Streak & History
+  int get completionStreak => _prefs.getInt(keyCompletionStreak) ?? 0;
+  String? get lastCompletedDate => _prefs.getString(keyLastCompletedDate);
+
+  static String formatDate(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+  bool get isCompletedToday {
+    final last = lastCompletedDate;
+    if (last == null) return false;
+    return last == formatDate(DateTime.now());
+  }
+
+  Future<int> recordSearchCompletion([DateTime? customNow]) async {
+    final now = customNow ?? DateTime.now();
+    final todayStr = formatDate(now);
+    final last = lastCompletedDate;
+
+    int newStreak;
+    if (last == todayStr) {
+      newStreak = completionStreak;
+    } else {
+      final yesterdayStr = formatDate(now.subtract(const Duration(days: 1)));
+      if (last == yesterdayStr) {
+        newStreak = completionStreak + 1;
+      } else {
+        newStreak = 1;
+      }
+      await _prefs.setString(keyLastCompletedDate, todayStr);
+      await _prefs.setInt(keyCompletionStreak, newStreak);
+    }
+    return newStreak;
+  }
 
   // Theme Mode
   String? get themeMode => _prefs.getString(keyThemeMode);
@@ -71,7 +119,6 @@ class PreferencesService {
   // App Opened Today
   Future<void> saveAppOpenedToday() async {
     final today = DateTime.now();
-    final formatted = '${today.year}-${today.month}-${today.day}';
-    await _prefs.setString(keyLastOpenedDate, formatted);
+    await _prefs.setString(keyLastOpenedDate, formatDate(today));
   }
 }

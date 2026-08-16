@@ -22,6 +22,8 @@ class _ConfigScreenState extends State<ConfigScreen> {
   bool _sendDailyReminder = false;
   bool _keepScreenOn = true;
   bool _showLoginReminderPopup = true;
+  bool _dataSaver = true;
+  bool _hapticFeedback = true;
   TimeOfDay _selectedTime = const TimeOfDay(hour: 19, minute: 0);
 
   @override
@@ -36,11 +38,23 @@ class _ConfigScreenState extends State<ConfigScreen> {
       _sendDailyReminder = prefs.sendDailyReminder;
       _keepScreenOn = prefs.keepScreenOn;
       _showLoginReminderPopup = prefs.showLoginReminderPopup;
+      _dataSaver = prefs.dataSaver;
+      _hapticFeedback = prefs.hapticFeedback;
       _selectedTime = TimeOfDay(
         hour: prefs.reminderHour,
         minute: prefs.reminderMinute,
       );
     });
+  }
+
+  Future<void> _onDataSaverChanged(bool value) async {
+    setState(() => _dataSaver = value);
+    await sl<PreferencesService>().setDataSaver(value);
+  }
+
+  Future<void> _onHapticFeedbackChanged(bool value) async {
+    setState(() => _hapticFeedback = value);
+    await sl<PreferencesService>().setHapticFeedback(value);
   }
 
   Future<void> _onShowLoginReminderPopupChanged(bool value) async {
@@ -159,6 +173,36 @@ class _ConfigScreenState extends State<ConfigScreen> {
                       value: _keepScreenOn,
                       onChanged: (value) => _onKeepScreenOnChanged(value),
                       title: const Text(Strings.keepScreenOnLabel),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Card(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionTitle('Optimization & Automation'),
+                    SwitchListTile(
+                      value: _dataSaver,
+                      onChanged: (value) => _onDataSaverChanged(value),
+                      title: const Text('Data Saver Mode'),
+                      subtitle: const Text(
+                        'Block web images to save data and speed up searches',
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    SwitchListTile(
+                      value: _hapticFeedback,
+                      onChanged: (value) => _onHapticFeedbackChanged(value),
+                      title: const Text('Completion Haptics'),
+                      subtitle: const Text(
+                        'Vibrate when searches finish',
+                      ),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ],

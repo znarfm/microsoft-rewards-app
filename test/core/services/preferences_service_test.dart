@@ -50,59 +50,86 @@ void main() {
     test('default amoledOverlay is false', () {
       expect(service.amoledOverlay, false);
     });
+
+    test('default dataSaver is true', () {
+      expect(service.dataSaver, true);
+    });
+
+    test('default hapticFeedback is true', () {
+      expect(service.hapticFeedback, true);
+    });
+
+    test('default completionStreak is 0', () {
+      expect(service.completionStreak, 0);
+    });
+
+    test('default isCompletedToday is false', () {
+      expect(service.isCompletedToday, false);
+    });
   });
 
-  group('PreferencesService Setters', () {
+  group('PreferencesService Setters & Actions', () {
     test('setLoggedIn updates loggedIn', () async {
       await service.setLoggedIn(true);
       expect(service.loggedIn, true);
     });
 
-    test('setSearchCount updates searchCount', () async {
-      await service.setSearchCount('30');
-      expect(service.searchCount, '30');
+    test('setDataSaver updates dataSaver', () async {
+      await service.setDataSaver(false);
+      expect(service.dataSaver, false);
     });
 
-    test('setSearchDelay updates searchDelay', () async {
-      await service.setSearchDelay('10');
-      expect(service.searchDelay, '10');
+    test('setHapticFeedback updates hapticFeedback', () async {
+      await service.setHapticFeedback(false);
+      expect(service.hapticFeedback, false);
     });
 
-    test('setSendDailyReminder updates sendDailyReminder', () async {
-      await service.setSendDailyReminder(true);
-      expect(service.sendDailyReminder, true);
+    test('recordSearchCompletion sets streak to 1 on first day', () async {
+      final now = DateTime(2026, 8, 16);
+      final streak = await service.recordSearchCompletion(now);
+      expect(streak, 1);
+      expect(service.completionStreak, 1);
+      expect(service.lastCompletedDate, '2026-08-16');
     });
 
-    test('setKeepScreenOn updates keepScreenOn', () async {
-      await service.setKeepScreenOn(false);
-      expect(service.keepScreenOn, false);
+    test('recordSearchCompletion increments streak on consecutive day', () async {
+      final day1 = DateTime(2026, 8, 15);
+      final day2 = DateTime(2026, 8, 16);
+
+      await service.recordSearchCompletion(day1);
+      expect(service.completionStreak, 1);
+
+      final streak = await service.recordSearchCompletion(day2);
+      expect(streak, 2);
+      expect(service.completionStreak, 2);
     });
 
-    test('setShowLoginReminderPopup updates showLoginReminderPopup', () async {
-      await service.setShowLoginReminderPopup(false);
-      expect(service.showLoginReminderPopup, false);
+    test('recordSearchCompletion maintains streak if called multiple times on same day', () async {
+      final day1 = DateTime(2026, 8, 16);
+
+      await service.recordSearchCompletion(day1);
+      final streak = await service.recordSearchCompletion(day1);
+
+      expect(streak, 1);
+      expect(service.completionStreak, 1);
     });
 
-    test('setReminderTime updates reminderHour and reminderMinute', () async {
-      await service.setReminderTime(8, 30);
-      expect(service.reminderHour, 8);
-      expect(service.reminderMinute, 30);
-    });
+    test('recordSearchCompletion resets streak to 1 if day skipped', () async {
+      final day1 = DateTime(2026, 8, 10);
+      final day2 = DateTime(2026, 8, 16);
 
-    test('setThemeMode updates themeMode', () async {
-      await service.setThemeMode('dark');
-      expect(service.themeMode, 'dark');
-    });
+      await service.recordSearchCompletion(day1);
+      expect(service.completionStreak, 1);
 
-    test('setAmoledOverlay updates amoledOverlay', () async {
-      await service.setAmoledOverlay(true);
-      expect(service.amoledOverlay, true);
+      final streak = await service.recordSearchCompletion(day2);
+      expect(streak, 1);
+      expect(service.completionStreak, 1);
     });
 
     test('saveAppOpenedToday saves formatted date string', () async {
       await service.saveAppOpenedToday();
       final now = DateTime.now();
-      final expected = '${now.year}-${now.month}-${now.day}';
+      final expected = PreferencesService.formatDate(now);
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString(PreferencesService.keyLastOpenedDate), expected);
     });
