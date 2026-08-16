@@ -265,7 +265,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                     ListTile(
                       leading: const Icon(Icons.info_outline),
                       title: const Text('Version'),
-                      subtitle: const Text('1.2.0+14'),
+                      subtitle: const Text('1.3.0+15'),
                       contentPadding: EdgeInsets.zero,
                     ),
                     ListTile(
