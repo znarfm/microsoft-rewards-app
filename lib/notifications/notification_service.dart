@@ -58,6 +58,7 @@ class NotificationService {
   }
 
   static const int _progressNotificationId = 2;
+  static bool _isSearchActive = false;
 
   static Future<void> _createNotificationChannel() async {
     const androidChannel = AndroidNotificationChannel(
@@ -81,7 +82,7 @@ class NotificationService {
     await androidPlugin?.createNotificationChannel(progressChannel);
   }
 
-  static Future<void> _requestNotificationPermissions() async {
+  static Future<void> requestNotificationPermissions() async {
     if (defaultTargetPlatform == TargetPlatform.android) {
       final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
@@ -91,7 +92,7 @@ class NotificationService {
   }
 
   static Future<void> scheduleDailyReminder({int hour = 19, int minute = 0}) async {
-    await _requestNotificationPermissions();
+    await requestNotificationPermissions();
     await cancelReminder();
     await _notifications.zonedSchedule(
       id: _reminderId,
@@ -131,6 +132,7 @@ class NotificationService {
       ),
     );
   }
+
   static tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
     final now = tz.TZDateTime.now(tz.local);
     debugPrint('Current time: $now');
@@ -148,7 +150,7 @@ class NotificationService {
     required int total,
     int remainingSeconds = 0,
   }) async {
-    await _requestNotificationPermissions();
+    _isSearchActive = true;
 
     final percent = total > 0 ? ((current / total) * 100).round() : 0;
 
@@ -183,9 +185,61 @@ class NotificationService {
         ),
       ),
     );
+
+    // If search finished or was cancelled while _notifications.show was awaiting, clear it
+    if (!_isSearchActive) {
+      await _notifications.cancel(id: _progressNotificationId);
+    }
+  }
+
+  static Future<void> showSearchCompletedNotification({required int total}) async {
+    _isSearchActive = false;
+    await _notifications.cancel(id: _progressNotificationId);
+
+    await _notifications.show(
+      id: _progressNotificationId,
+      title: 'Searches Completed',
+      body: 'Successfully finished all $total Bing searches.',
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'daily_reminder_channel',
+          'Daily Reminders',
+          channelDescription: 'Search completion notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          autoCancel: true,
+          ongoing: false,
+          icon: '@mipmap/ic_launcher',
+        ),
+      ),
+    );
+  }
+
+  static Future<void> showSearchFailedNotification({required String message}) async {
+    _isSearchActive = false;
+    await _notifications.cancel(id: _progressNotificationId);
+
+    await _notifications.show(
+      id: _progressNotificationId,
+      title: 'Search Failed',
+      body: message,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'daily_reminder_channel',
+          'Daily Reminders',
+          channelDescription: 'Search error notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          autoCancel: true,
+          ongoing: false,
+          icon: '@mipmap/ic_launcher',
+        ),
+      ),
+    );
   }
 
   static Future<void> cancelSearchProgressNotification() async {
+    _isSearchActive = false;
     await _notifications.cancel(id: _progressNotificationId);
   }
 }

@@ -19,6 +19,7 @@ class SearchTab extends StatefulWidget {
 
 class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
   bool _isAppInFocus = true;
+  int _lastTotalCount = 0;
 
   @override
   void initState() {
@@ -65,6 +66,7 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
 
   void _handleStateChanges(BuildContext context, SearchState state) {
     if (state is SearchInProgress) {
+      _lastTotalCount = state.totalCount;
       if (!_isAppInFocus) {
         NotificationService.showSearchProgressNotification(
           current: state.currentCount,
@@ -76,6 +78,13 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
       }
     }
     if (state is SearchFailure) {
+      if (!_isAppInFocus) {
+        NotificationService.showSearchFailedNotification(
+          message: '${Strings.searchFailed}${state.message}',
+        );
+      } else {
+        NotificationService.cancelSearchProgressNotification();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -100,6 +109,13 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
       );
     }
     if (state is SearchSuccess) {
+      if (!_isAppInFocus) {
+        NotificationService.showSearchCompletedNotification(
+          total: _lastTotalCount,
+        );
+      } else {
+        NotificationService.cancelSearchProgressNotification();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
@@ -122,6 +138,7 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
       );
     }
     if (state is SearchCancelled) {
+      NotificationService.cancelSearchProgressNotification();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
@@ -145,7 +162,6 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
     }
     if (state is SearchFailure || state is SearchSuccess || state is SearchCancelled) {
       WakelockPlus.disable();
-      NotificationService.cancelSearchProgressNotification();
     }
   }
 }
