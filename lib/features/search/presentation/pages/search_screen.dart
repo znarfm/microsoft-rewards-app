@@ -6,6 +6,7 @@ import '../../../../core/constants/strings.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../bloc/search_bloc.dart';
+import '../widgets/amoled_overlay.dart';
 import '../widgets/login_reminder_dialog.dart';
 import '../widgets/search_form.dart';
 import '../widgets/search_tab.dart';
@@ -22,10 +23,11 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   int _tabIndex = 0;
-  // Session-only: dismissing the overlay (tap/back) must NOT flip the
+  // Session-only: dismissing the overlay (hold/back) must NOT flip the
   // persisted toggle — it comes back on the next search.
   bool _overlayDismissed = false;
   bool _systemUiHidden = false;
+  DateTime? _lastBackPressTime;
   final GlobalKey<SearchFormState> _searchFormKey = GlobalKey();
 
   @override
@@ -97,14 +99,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
 
-              // Pure-black AMOLED overlay while search runs (if enabled).
+              // Pure-black AMOLED overlay with 1.5s hold-to-wake gesture.
               if (showOverlay)
                 Positioned.fill(
-                  child: GestureDetector(
-                    onTap: _hideOverlay,
-                    behavior: HitTestBehavior.opaque,
-                    child: const ColoredBox(color: Colors.black),
-                  ),
+                  child: AmoledOverlay(onWake: _hideOverlay),
                 ),
             ],
           );
@@ -113,7 +111,26 @@ class _SearchScreenState extends State<SearchScreen> {
             return PopScope(
               canPop: false,
               onPopInvokedWithResult: (didPop, result) {
-                if (!didPop) _hideOverlay();
+                if (didPop) return;
+                final now = DateTime.now();
+                if (_lastBackPressTime != null &&
+                    now.difference(_lastBackPressTime!) <
+                        const Duration(seconds: 2)) {
+                  _hideOverlay();
+                } else {
+                  _lastBackPressTime = now;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content:
+                          const Text('Press back again to exit AMOLED mode'),
+                      duration: const Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                  );
+                }
               },
               child: contentStack,
             );
