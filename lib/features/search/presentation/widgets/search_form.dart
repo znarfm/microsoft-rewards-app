@@ -293,6 +293,7 @@ class SearchFormState extends State<SearchForm> {
   }
 
   Future<void> _startSearch() async {
+    if (_webViewController == null) return;
     if (!_formKey.currentState!.validate()) return;
 
     await saveCountValue();

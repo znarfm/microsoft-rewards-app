@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/preferences_service.dart';
 
 /// User-selectable theme modes.
 enum AppThemeMode {
@@ -17,23 +17,23 @@ enum AppThemeMode {
 }
 
 /// Holds persisted theme + AMOLED overlay state so the app root and the
-/// search tab can react without re-reading SharedPreferences on every frame.
+/// search tab can react without re-reading storage on every frame.
 class ThemeController extends ChangeNotifier {
-  static const String modePrefKey = 'theme_mode';
-  static const String overlayPrefKey = 'amoled_screen_off';
+  final PreferencesService _preferencesService;
 
   AppThemeMode _mode = AppThemeMode.system;
   bool _amoledOverlay = false;
   bool _loaded = false;
+
+  ThemeController(this._preferencesService);
 
   AppThemeMode get mode => _mode;
   bool get amoledOverlay => _amoledOverlay;
   bool get isLoaded => _loaded;
 
   Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    _mode = AppThemeMode.fromName(prefs.getString(modePrefKey));
-    _amoledOverlay = prefs.getBool(overlayPrefKey) ?? false;
+    _mode = AppThemeMode.fromName(_preferencesService.themeMode);
+    _amoledOverlay = _preferencesService.amoledOverlay;
     _loaded = true;
     notifyListeners();
   }
@@ -42,15 +42,13 @@ class ThemeController extends ChangeNotifier {
     if (mode == _mode) return;
     _mode = mode;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(modePrefKey, mode.name);
+    await _preferencesService.setThemeMode(mode.name);
   }
 
   Future<void> setAmoledOverlay(bool enabled) async {
     if (enabled == _amoledOverlay) return;
     _amoledOverlay = enabled;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(overlayPrefKey, enabled);
+    await _preferencesService.setAmoledOverlay(enabled);
   }
 }

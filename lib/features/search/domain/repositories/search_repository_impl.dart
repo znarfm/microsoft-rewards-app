@@ -32,7 +32,7 @@ class SearchRepositoryImpl implements SearchRepository {
         }
         onProgress(i + 1, count, 0);
         final query = dataSource.randomSentence();
-        await SearchHelper.launchSearch(controller: controller, query: query);
+        await searchHelper.launchSearch(controller: controller, query: query);
 
         if (i < count - 1) {
           final totalDelayMs = (delay * 1000 + random.nextInt(1001)).toInt();
@@ -47,6 +47,7 @@ class SearchRepositoryImpl implements SearchRepository {
         }
       }
     } catch (e) {
+      if (cancellationToken.isCancelled) return;
       throw Exception('Search failed: ${ErrorHandler.getErrorMessage(e)}');
     }
   }

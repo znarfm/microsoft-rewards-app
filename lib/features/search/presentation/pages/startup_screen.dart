@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/preferences_service.dart';
-import '../bloc/search_bloc.dart';
 import 'login_screen.dart';
 import 'search_screen.dart';
 
@@ -39,9 +37,6 @@ class _StartupScreenState extends State<StartupScreen> {
       );
     }
 
-    return BlocProvider<SearchBloc>(
-      create: (_) => sl<SearchBloc>(),
-      child: _loggedIn! ? const SearchScreen() : const LoginScreen(),
-    );
+    return _loggedIn! ? const SearchScreen() : const LoginScreen();
   }
 }

@@ -15,15 +15,18 @@ final GetIt sl = GetIt.instance;
 Future<void> init() async {
   // Register SharedPreferences & PreferencesService
   final prefs = await SharedPreferences.getInstance();
-  sl.registerLazySingleton<PreferencesService>(() => PreferencesService(prefs));
+  final preferencesService = PreferencesService(prefs);
+  sl.registerLazySingleton<PreferencesService>(() => preferencesService);
 
   // Register theme controller (loads persisted mode + overlay flag)
-  final themeController = ThemeController();
+  final themeController = ThemeController(preferencesService);
   await themeController.load();
   sl.registerLazySingleton<ThemeController>(() => themeController);
 
-  // Register BLoCs
-  sl.registerFactory(() => SearchBloc(performSearch: sl()));
+  // Register BLoCs (singleton so background notification stop action controls active search)
+  sl.registerLazySingleton<SearchBloc>(
+    () => SearchBloc(performSearch: sl()),
+  );
 
   // Register use cases
   sl.registerLazySingleton(() => PerformSearch(sl()));
@@ -36,9 +39,9 @@ Future<void> init() async {
 
   // Register data sources
   sl.registerLazySingleton<SearchWordsDataSource>(
-        () => SearchWordsDataSourceImpl(),
+    () => SearchWordsDataSourceImpl(),
   );
 
   // Register core services
-  sl.registerLazySingleton(() => SearchHelper());
+  sl.registerLazySingleton(() => const SearchHelper());
 }

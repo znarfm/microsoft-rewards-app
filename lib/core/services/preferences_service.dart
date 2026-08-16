@@ -16,6 +16,18 @@ class PreferencesService {
   static const String keyReminderHour = 'reminder_hour';
   static const String keyReminderMinute = 'reminder_minute';
   static const String keyLastOpenedDate = 'last_opened_date';
+  static const String keyThemeMode = 'theme_mode';
+  static const String keyAmoledOverlay = 'amoled_screen_off';
+
+  // Theme Mode
+  String? get themeMode => _prefs.getString(keyThemeMode);
+  Future<bool> setThemeMode(String value) =>
+      _prefs.setString(keyThemeMode, value);
+
+  // AMOLED Overlay
+  bool get amoledOverlay => _prefs.getBool(keyAmoledOverlay) ?? false;
+  Future<bool> setAmoledOverlay(bool value) =>
+      _prefs.setBool(keyAmoledOverlay, value);
 
   // Logged In
   bool get loggedIn => _prefs.getBool(keyLoggedIn) ?? false;
