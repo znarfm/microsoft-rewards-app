@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/images/auto_search.png" alt="Auto Search logo" height="96" />
+<img src="assets/images/play_store_512.png" alt="Microsoft Rewards Automator logo" height="96" />
 
 # Microsoft Rewards Automator
 
