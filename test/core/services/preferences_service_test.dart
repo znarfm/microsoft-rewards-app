@@ -88,7 +88,7 @@ void main() {
       final now = DateTime(2026, 8, 16);
       final streak = await service.recordSearchCompletion(now);
       expect(streak, 1);
-      expect(service.completionStreak, 1);
+      expect(service.getCompletionStreak(now), 1);
       expect(service.lastCompletedDate, '2026-08-16');
     });
 
@@ -97,11 +97,11 @@ void main() {
       final day2 = DateTime(2026, 8, 16);
 
       await service.recordSearchCompletion(day1);
-      expect(service.completionStreak, 1);
+      expect(service.getCompletionStreak(day1), 1);
 
       final streak = await service.recordSearchCompletion(day2);
       expect(streak, 2);
-      expect(service.completionStreak, 2);
+      expect(service.getCompletionStreak(day2), 2);
     });
 
     test('recordSearchCompletion maintains streak if called multiple times on same day', () async {
@@ -111,7 +111,7 @@ void main() {
       final streak = await service.recordSearchCompletion(day1);
 
       expect(streak, 1);
-      expect(service.completionStreak, 1);
+      expect(service.getCompletionStreak(day1), 1);
     });
 
     test('recordSearchCompletion resets streak to 1 if day skipped', () async {
@@ -119,11 +119,44 @@ void main() {
       final day2 = DateTime(2026, 8, 16);
 
       await service.recordSearchCompletion(day1);
-      expect(service.completionStreak, 1);
+      // On day1 + 3 days (e.g. Aug 13), streak should report 0 because it's expired
+      expect(service.getCompletionStreak(DateTime(2026, 8, 13)), 0);
 
       final streak = await service.recordSearchCompletion(day2);
       expect(streak, 1);
-      expect(service.completionStreak, 1);
+      expect(service.getCompletionStreak(day2), 1);
+    });
+
+    test('getCompletionStreak returns 0 when last completed date is older than yesterday', () async {
+      final completedDay = DateTime(2026, 8, 1);
+      await service.recordSearchCompletion(completedDay);
+
+      // On Aug 1 (same day): streak is 1
+      expect(service.getCompletionStreak(DateTime(2026, 8, 1)), 1);
+      // On Aug 2 (next day): streak is 1 (still valid before completing search for Aug 2)
+      expect(service.getCompletionStreak(DateTime(2026, 8, 2)), 1);
+      // On Aug 3 (skipped a day): streak is 0
+      expect(service.getCompletionStreak(DateTime(2026, 8, 3)), 0);
+      // On Aug 10: streak is 0
+      expect(service.getCompletionStreak(DateTime(2026, 8, 10)), 0);
+    });
+
+    test('streak continuity across daylight-saving spring-transition boundary', () async {
+      // Spring forward transition day (March 8, 2026)
+      final dayBeforeDst = DateTime(2026, 3, 7, 23, 30);
+      final dstTransitionDay = DateTime(2026, 3, 8, 1, 30);
+      final dayAfterDst = DateTime(2026, 3, 9, 0, 30);
+
+      await service.recordSearchCompletion(dayBeforeDst);
+      expect(service.getCompletionStreak(dstTransitionDay), 1);
+
+      final streakDstDay = await service.recordSearchCompletion(dstTransitionDay);
+      expect(streakDstDay, 2);
+      expect(service.getCompletionStreak(dayAfterDst), 2);
+
+      final streakAfterDst = await service.recordSearchCompletion(dayAfterDst);
+      expect(streakAfterDst, 3);
+      expect(service.getCompletionStreak(dayAfterDst), 3);
     });
 
     test('saveAppOpenedToday saves formatted date string', () async {

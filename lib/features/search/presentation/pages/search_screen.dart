@@ -107,11 +107,11 @@ class _SearchScreenState extends State<SearchScreen> {
             ],
           );
 
-          if (showOverlay) {
-            return PopScope(
-              canPop: false,
-              onPopInvokedWithResult: (didPop, result) {
-                if (didPop) return;
+          return PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) async {
+              if (didPop) return;
+              if (showOverlay) {
                 final now = DateTime.now();
                 if (_lastBackPressTime != null &&
                     now.difference(_lastBackPressTime!) <
@@ -119,6 +119,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   _hideOverlay();
                 } else {
                   _lastBackPressTime = now;
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content:
@@ -131,12 +132,26 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   );
                 }
-              },
-              child: contentStack,
-            );
-          }
+                return;
+              }
 
-          return contentStack;
+              if (_tabIndex == 0) {
+                final handled =
+                    await _searchFormKey.currentState?.handleBackPress() ??
+                        false;
+                if (handled) return;
+              }
+
+              if (!context.mounted) return;
+              final navigator = Navigator.of(context);
+              if (navigator.canPop()) {
+                navigator.pop();
+              } else {
+                SystemNavigator.pop();
+              }
+            },
+            child: contentStack,
+          );
         },
       ),
     );

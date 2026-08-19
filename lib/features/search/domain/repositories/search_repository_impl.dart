@@ -34,7 +34,7 @@ class SearchRepositoryImpl implements SearchRepository {
         final query = dataSource.randomSentence();
         await searchHelper.launchSearch(controller: controller, query: query);
 
-        if (i < count - 1) {
+        if (i < count - 1 && delay > 0) {
           final totalDelayMs = (delay * 1000 + random.nextInt(1001)).toInt();
           final totalSeconds = (totalDelayMs / 1000).ceil();
           for (int sec = totalSeconds; sec > 0; sec--) {

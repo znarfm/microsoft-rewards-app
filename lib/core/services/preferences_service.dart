@@ -34,30 +34,47 @@ class PreferencesService {
       _prefs.setBool(keyHapticFeedback, value);
 
   // Completion Streak & History
-  int get completionStreak => _prefs.getInt(keyCompletionStreak) ?? 0;
+  int get completionStreak => getCompletionStreak();
+
+  int getCompletionStreak([DateTime? customNow]) {
+    final last = lastCompletedDate;
+    if (last == null) return 0;
+    final now = customNow ?? DateTime.now();
+    final todayStr = formatDate(now);
+    final yesterdayStr = formatDate(DateTime(now.year, now.month, now.day - 1));
+    if (last == todayStr || last == yesterdayStr) {
+      return _prefs.getInt(keyCompletionStreak) ?? 0;
+    }
+    return 0;
+  }
+
   String? get lastCompletedDate => _prefs.getString(keyLastCompletedDate);
 
   static String formatDate(DateTime date) =>
       '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-  bool get isCompletedToday {
+  bool get isCompletedToday => isCompletedTodayOn();
+
+  bool isCompletedTodayOn([DateTime? customNow]) {
     final last = lastCompletedDate;
     if (last == null) return false;
-    return last == formatDate(DateTime.now());
+    final now = customNow ?? DateTime.now();
+    return last == formatDate(now);
   }
 
   Future<int> recordSearchCompletion([DateTime? customNow]) async {
     final now = customNow ?? DateTime.now();
     final todayStr = formatDate(now);
     final last = lastCompletedDate;
+    final currentStreak = _prefs.getInt(keyCompletionStreak) ?? 0;
 
     int newStreak;
     if (last == todayStr) {
-      newStreak = completionStreak;
+      newStreak = currentStreak;
     } else {
-      final yesterdayStr = formatDate(now.subtract(const Duration(days: 1)));
+      final yesterdayStr = formatDate(DateTime(now.year, now.month, now.day - 1));
       if (last == yesterdayStr) {
-        newStreak = completionStreak + 1;
+        newStreak = currentStreak + 1;
       } else {
         newStreak = 1;
       }
