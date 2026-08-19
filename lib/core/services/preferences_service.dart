@@ -41,7 +41,7 @@ class PreferencesService {
     if (last == null) return 0;
     final now = customNow ?? DateTime.now();
     final todayStr = formatDate(now);
-    final yesterdayStr = formatDate(now.subtract(const Duration(days: 1)));
+    final yesterdayStr = formatDate(DateTime(now.year, now.month, now.day - 1));
     if (last == todayStr || last == yesterdayStr) {
       return _prefs.getInt(keyCompletionStreak) ?? 0;
     }
@@ -72,7 +72,7 @@ class PreferencesService {
     if (last == todayStr) {
       newStreak = currentStreak;
     } else {
-      final yesterdayStr = formatDate(now.subtract(const Duration(days: 1)));
+      final yesterdayStr = formatDate(DateTime(now.year, now.month, now.day - 1));
       if (last == yesterdayStr) {
         newStreak = currentStreak + 1;
       } else {

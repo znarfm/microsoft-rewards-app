@@ -141,6 +141,24 @@ void main() {
       expect(service.getCompletionStreak(DateTime(2026, 8, 10)), 0);
     });
 
+    test('streak continuity across daylight-saving spring-transition boundary', () async {
+      // Spring forward transition day (March 8, 2026)
+      final dayBeforeDst = DateTime(2026, 3, 7, 23, 30);
+      final dstTransitionDay = DateTime(2026, 3, 8, 1, 30);
+      final dayAfterDst = DateTime(2026, 3, 9, 0, 30);
+
+      await service.recordSearchCompletion(dayBeforeDst);
+      expect(service.getCompletionStreak(dstTransitionDay), 1);
+
+      final streakDstDay = await service.recordSearchCompletion(dstTransitionDay);
+      expect(streakDstDay, 2);
+      expect(service.getCompletionStreak(dayAfterDst), 2);
+
+      final streakAfterDst = await service.recordSearchCompletion(dayAfterDst);
+      expect(streakAfterDst, 3);
+      expect(service.getCompletionStreak(dayAfterDst), 3);
+    });
+
     test('saveAppOpenedToday saves formatted date string', () async {
       await service.saveAppOpenedToday();
       final now = DateTime.now();
