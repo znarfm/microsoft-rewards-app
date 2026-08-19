@@ -11,7 +11,7 @@ class Strings {
   static const String searchInProgress = 'Cancel Search';
   static const String startSearch = 'Start Search';
 
-  static const String invalidNumberError = 'Please enter a valid number between 1 and 100.';
+  static const String invalidNumberError = 'Please enter a valid number between 1 and 50.';
   static const String invalidDelayError = 'Please enter a valid delay of at least 0.5 seconds.';
 
   // Tabs
