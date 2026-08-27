@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,23 +25,44 @@ class SearchTab extends StatefulWidget {
 class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
   bool _isAppInFocus = true;
   int _lastTotalCount = 0;
+  Timer? _midnightTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _scheduleMidnightRefresh();
   }
 
   @override
   void dispose() {
+    _midnightTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     NotificationService.cancelSearchProgressNotification();
+    WakelockPlus.disable();
     super.dispose();
+  }
+
+  void _scheduleMidnightRefresh() {
+    _midnightTimer?.cancel();
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+    final delay = nextMidnight.difference(now) + const Duration(milliseconds: 500);
+    _midnightTimer = Timer(delay, () {
+      if (mounted) {
+        setState(() {});
+        _scheduleMidnightRefresh();
+      }
+    });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _isAppInFocus = (state == AppLifecycleState.resumed);
+    if (state == AppLifecycleState.resumed) {
+      _scheduleMidnightRefresh();
+      if (mounted) setState(() {});
+    }
     final searchBloc = context.read<SearchBloc>();
     final currentSearchState = searchBloc.state;
 
@@ -145,6 +168,12 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
   }
 
   Future<void> _handleStateChanges(BuildContext _, SearchState state) async {
+    if (state is SearchFailure ||
+        state is SearchSuccess ||
+        state is SearchCancelled) {
+      WakelockPlus.disable();
+    }
+
     if (state is SearchInProgress) {
       _lastTotalCount = state.totalCount;
       if (!_isAppInFocus) {
@@ -249,9 +278,6 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
           duration: const Duration(seconds: 2),
         ),
       );
-    }
-    if (state is SearchFailure || state is SearchSuccess || state is SearchCancelled) {
-      WakelockPlus.disable();
     }
   }
 }

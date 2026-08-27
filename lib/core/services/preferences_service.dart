@@ -45,6 +45,9 @@ class PreferencesService {
     if (last == todayStr || last == yesterdayStr) {
       return _prefs.getInt(keyCompletionStreak) ?? 0;
     }
+    if ((_prefs.getInt(keyCompletionStreak) ?? 0) != 0) {
+      _prefs.setInt(keyCompletionStreak, 0);
+    }
     return 0;
   }
 

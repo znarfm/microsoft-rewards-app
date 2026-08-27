@@ -58,6 +58,7 @@ class SearchFormState extends State<SearchForm> {
     _countController.dispose();
     _delayController.dispose();
     _webViewController = null;
+    WakelockPlus.disable();
     super.dispose();
   }
 
