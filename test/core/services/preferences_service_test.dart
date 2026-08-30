@@ -214,6 +214,26 @@ void main() {
       expect(service.bestStreak, 3);
     });
 
+    test('expired legacy streak without keyBestStreak preserves historical value in bestStreak', () async {
+      SharedPreferences.setMockInitialValues({
+        PreferencesService.keyCompletionStreak: 7,
+        PreferencesService.keyLastCompletedDate: '2026-07-01',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final legacyService = PreferencesService(prefs);
+
+      // Verify no keyBestStreak in storage
+      expect(prefs.getInt(PreferencesService.keyBestStreak), isNull);
+
+      final now = DateTime(2026, 8, 30);
+      // Streak expired: checkAndClearLostStreak clears current streak to 0 and stores 7 into keyBestStreak
+      final lost = legacyService.checkAndClearLostStreak(now);
+      expect(lost, 7);
+      expect(legacyService.completionStreak, 0);
+      expect(legacyService.bestStreak, 7);
+      expect(prefs.getInt(PreferencesService.keyBestStreak), 7);
+    });
+
     test('saveAppOpenedToday saves formatted date string', () async {
       await service.saveAppOpenedToday();
       final now = DateTime.now();

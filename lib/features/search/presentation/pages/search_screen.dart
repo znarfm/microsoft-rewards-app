@@ -29,12 +29,48 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _systemUiHidden = false;
   DateTime? _lastBackPressTime;
   final GlobalKey<SearchFormState> _searchFormKey = GlobalKey();
+  static const _shortcutChannel =
+      MethodChannel('com.spin311.microsoft_automatic_rewards/shortcuts');
 
   @override
   void initState() {
     super.initState();
+    _initShortcutHandling();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showLoginReminderDialog(context);
+    });
+  }
+
+  void _initShortcutHandling() {
+    _shortcutChannel.setMethodCallHandler((call) async {
+      if (call.method == 'onShortcutTriggered' &&
+          call.arguments == 'start_search') {
+        _triggerShortcutSearch();
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final initial =
+            await _shortcutChannel.invokeMethod<String>('getInitialShortcut');
+        if (initial == 'start_search') {
+          _triggerShortcutSearch();
+        }
+      } catch (e) {
+        debugPrint('Error getting initial shortcut: $e');
+      }
+    });
+  }
+
+  void _triggerShortcutSearch() {
+    if (!mounted) return;
+    if (_tabIndex != 0) {
+      setState(() => _tabIndex = 0);
+    }
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        _searchFormKey.currentState?.triggerSearchAction();
+      }
     });
   }
 

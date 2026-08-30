@@ -68,6 +68,10 @@ class PreferencesService {
     if (last != todayStr && last != yesterdayStr) {
       final lostStreak = _prefs.getInt(keyCompletionStreak) ?? 0;
       if (lostStreak > 0) {
+        final currentBest = _prefs.getInt(keyBestStreak) ?? 0;
+        if (lostStreak > currentBest) {
+          _prefs.setInt(keyBestStreak, lostStreak);
+        }
         _prefs.setInt(keyCompletionStreak, 0);
         return lostStreak;
       }

@@ -7,9 +7,13 @@
         android:shortcutShortLabel="@string/shortcut_start_search_short"
         android:shortcutLongLabel="@string/shortcut_start_search_long">
         <intent
-            android:action="android.intent.action.VIEW"
+            android:action="com.spin311.microsoft_automatic_rewards.START_SEARCH"
             android:targetPackage="com.spin311.microsoft_automatic_rewards"
-            android:targetClass="com.spin311.microsoft_automatic_rewards.MainActivity" />
+            android:targetClass="com.spin311.microsoft_automatic_rewards.MainActivity">
+            <extra
+                android:name="shortcut_action"
+                android:value="start_search" />
+        </intent>
         <categories android:name="android.shortcut.conversation" />
     </shortcut>
 </shortcuts>
