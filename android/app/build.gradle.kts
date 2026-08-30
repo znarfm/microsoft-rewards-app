@@ -31,25 +31,22 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("upload-keystore.jks")
+            storePassword = "microsoft"
+            keyAlias = "upload"
+            keyPassword = "microsoft"
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfigs {
-                create("release") {
-                    storeFile = file("upload-keystore.jks")
-                    storePassword = "microsoft"
-                    keyAlias = "upload"
-                    keyPassword = "microsoft"
-                }
-            }
-
-            buildTypes {
-                getByName("release") {
-
-                    signingConfig = signingConfigs.getByName("release")
-                    // ... other release configurations ...
-                }
+            val releaseConfig = signingConfigs.getByName("release")
+            signingConfig = if (releaseConfig.storeFile?.exists() == true) {
+                releaseConfig
+            } else {
+                signingConfigs.getByName("debug")
             }
         }
     }
