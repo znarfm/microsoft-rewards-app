@@ -186,6 +186,36 @@ class _ConfigScreenState extends State<ConfigScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _sectionTitle('Streak & Activity'),
+                    ListTile(
+                      leading: const Text('🔥', style: TextStyle(fontSize: 22)),
+                      title: const Text('Current Streak'),
+                      trailing: Text(
+                        '${sl<PreferencesService>().completionStreak} days',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    ListTile(
+                      leading: const Text('🏆', style: TextStyle(fontSize: 22)),
+                      title: const Text('Best Streak'),
+                      trailing: Text(
+                        '${sl<PreferencesService>().bestStreak} days',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Card(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     _sectionTitle('Optimization & Automation'),
                     SwitchListTile(
                       value: _dataSaver,
@@ -265,7 +295,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                     ListTile(
                       leading: const Icon(Icons.info_outline),
                       title: const Text('Version'),
-                      subtitle: const Text('1.3.0+15'),
+                      subtitle: const Text('1.4.0'),
                       contentPadding: EdgeInsets.zero,
                     ),
                     ListTile(
