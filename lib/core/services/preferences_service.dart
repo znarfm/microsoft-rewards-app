@@ -20,6 +20,7 @@ class PreferencesService {
   static const String keyAmoledOverlay = 'amoled_screen_off';
   static const String keyDataSaver = 'data_saver';
   static const String keyCompletionStreak = 'completion_streak';
+  static const String keyBestStreak = 'best_streak';
   static const String keyLastCompletedDate = 'last_completed_date';
   static const String keyHapticFeedback = 'haptic_feedback';
 
@@ -36,6 +37,16 @@ class PreferencesService {
   // Completion Streak & History
   int get completionStreak => getCompletionStreak();
 
+  int get bestStreak {
+    final savedBest = _prefs.getInt(keyBestStreak) ?? 0;
+    final current = getCompletionStreak();
+    if (current > savedBest) {
+      _prefs.setInt(keyBestStreak, current);
+      return current;
+    }
+    return savedBest;
+  }
+
   int getCompletionStreak([DateTime? customNow]) {
     final last = lastCompletedDate;
     if (last == null) return 0;
@@ -45,8 +56,25 @@ class PreferencesService {
     if (last == todayStr || last == yesterdayStr) {
       return _prefs.getInt(keyCompletionStreak) ?? 0;
     }
-    if ((_prefs.getInt(keyCompletionStreak) ?? 0) != 0) {
-      _prefs.setInt(keyCompletionStreak, 0);
+    return 0;
+  }
+
+  int checkAndClearLostStreak([DateTime? customNow]) {
+    final last = lastCompletedDate;
+    if (last == null) return 0;
+    final now = customNow ?? DateTime.now();
+    final todayStr = formatDate(now);
+    final yesterdayStr = formatDate(DateTime(now.year, now.month, now.day - 1));
+    if (last != todayStr && last != yesterdayStr) {
+      final lostStreak = _prefs.getInt(keyCompletionStreak) ?? 0;
+      if (lostStreak > 0) {
+        final currentBest = _prefs.getInt(keyBestStreak) ?? 0;
+        if (lostStreak > currentBest) {
+          _prefs.setInt(keyBestStreak, lostStreak);
+        }
+        _prefs.setInt(keyCompletionStreak, 0);
+        return lostStreak;
+      }
     }
     return 0;
   }
@@ -83,6 +111,10 @@ class PreferencesService {
       }
       await _prefs.setString(keyLastCompletedDate, todayStr);
       await _prefs.setInt(keyCompletionStreak, newStreak);
+    }
+    final savedBest = _prefs.getInt(keyBestStreak) ?? 0;
+    if (newStreak > savedBest) {
+      await _prefs.setInt(keyBestStreak, newStreak);
     }
     return newStreak;
   }

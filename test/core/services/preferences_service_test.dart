@@ -159,6 +159,81 @@ void main() {
       expect(service.getCompletionStreak(dayAfterDst), 3);
     });
 
+    test('checkAndClearLostStreak returns lost streak and clears it', () async {
+      final day1 = DateTime(2026, 8, 1);
+      final day2 = DateTime(2026, 8, 2);
+      final day4 = DateTime(2026, 8, 4);
+
+      await service.recordSearchCompletion(day1);
+      await service.recordSearchCompletion(day2);
+      expect(service.getCompletionStreak(day2), 2);
+
+      // On Day 4 (2 days missed), lost streak is 2
+      final lost = service.checkAndClearLostStreak(day4);
+      expect(lost, 2);
+
+      // Second check returns 0 because already cleared
+      expect(service.checkAndClearLostStreak(day4), 0);
+      expect(service.getCompletionStreak(day4), 0);
+    });
+
+    test('checkAndClearLostStreak returns 0 if streak still active', () async {
+      final day1 = DateTime(2026, 8, 1);
+      final day2 = DateTime(2026, 8, 2);
+
+      await service.recordSearchCompletion(day1);
+
+      // On day 1 (same day): not lost
+      expect(service.checkAndClearLostStreak(day1), 0);
+
+      // On day 2 (next day): not lost yet (still active today)
+      expect(service.checkAndClearLostStreak(day2), 0);
+    });
+
+    test('bestStreak tracks highest streak achieved and persists across resets', () async {
+      final day1 = DateTime(2026, 8, 1);
+      final day2 = DateTime(2026, 8, 2);
+      final day3 = DateTime(2026, 8, 3);
+      final day6 = DateTime(2026, 8, 6);
+
+      await service.recordSearchCompletion(day1);
+      await service.recordSearchCompletion(day2);
+      await service.recordSearchCompletion(day3);
+      expect(service.getCompletionStreak(day3), 3);
+      expect(service.bestStreak, 3);
+
+      // Streak lost on day 6
+      expect(service.checkAndClearLostStreak(day6), 3);
+      expect(service.getCompletionStreak(day6), 0);
+      // Best streak preserved
+      expect(service.bestStreak, 3);
+
+      // Start new streak of 1 day
+      await service.recordSearchCompletion(day6);
+      expect(service.getCompletionStreak(day6), 1);
+      expect(service.bestStreak, 3);
+    });
+
+    test('expired legacy streak without keyBestStreak preserves historical value in bestStreak', () async {
+      SharedPreferences.setMockInitialValues({
+        PreferencesService.keyCompletionStreak: 7,
+        PreferencesService.keyLastCompletedDate: '2026-07-01',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final legacyService = PreferencesService(prefs);
+
+      // Verify no keyBestStreak in storage
+      expect(prefs.getInt(PreferencesService.keyBestStreak), isNull);
+
+      final now = DateTime(2026, 8, 30);
+      // Streak expired: checkAndClearLostStreak clears current streak to 0 and stores 7 into keyBestStreak
+      final lost = legacyService.checkAndClearLostStreak(now);
+      expect(lost, 7);
+      expect(legacyService.completionStreak, 0);
+      expect(legacyService.bestStreak, 7);
+      expect(prefs.getInt(PreferencesService.keyBestStreak), 7);
+    });
+
     test('saveAppOpenedToday saves formatted date string', () async {
       await service.saveAppOpenedToday();
       final now = DateTime.now();

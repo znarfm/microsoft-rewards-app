@@ -32,6 +32,9 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _scheduleMidnightRefresh();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndNotifyLostStreak();
+    });
   }
 
   @override
@@ -50,10 +53,41 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
     final delay = nextMidnight.difference(now) + const Duration(milliseconds: 500);
     _midnightTimer = Timer(delay, () {
       if (mounted) {
+        _checkAndNotifyLostStreak();
         setState(() {});
         _scheduleMidnightRefresh();
       }
     });
+  }
+
+  void _checkAndNotifyLostStreak() {
+    if (!mounted) return;
+    final prefs = sl<PreferencesService>();
+    final lostStreak = prefs.checkAndClearLostStreak();
+    if (lostStreak > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.sentiment_dissatisfied_outlined, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'You lost your $lostStreak day streak! Complete searches today to start fresh.',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange.shade800,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   @override
@@ -61,6 +95,7 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
     _isAppInFocus = (state == AppLifecycleState.resumed);
     if (state == AppLifecycleState.resumed) {
       _scheduleMidnightRefresh();
+      _checkAndNotifyLostStreak();
       if (mounted) setState(() {});
     }
     final searchBloc = context.read<SearchBloc>();
@@ -84,6 +119,7 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
     final prefs = sl<PreferencesService>();
     final isDoneToday = prefs.isCompletedToday;
     final streak = prefs.completionStreak;
+    final bestStreak = prefs.bestStreak;
 
     return Padding(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -150,6 +186,32 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
                               color: Theme.of(context).brightness == Brightness.dark
                                   ? Colors.orangeAccent
                                   : Colors.deepOrange,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (bestStreak > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant.withAlpha(60),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('🏆', style: TextStyle(fontSize: 12)),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Best: $bestStreak days',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
