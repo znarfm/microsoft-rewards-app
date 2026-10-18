@@ -1,5 +1,6 @@
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:microsoft_automatic_rewards/core/di/search_cancellation_token.dart';
 import 'package:microsoft_automatic_rewards/core/utils/helpers/search_helper.dart';
 import 'package:microsoft_automatic_rewards/features/search/data/dataSources/search_words.dart';
@@ -43,6 +44,7 @@ void main() {
   late FakeWebViewController fakeController;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     fakeDataSource = FakeSearchWordsDataSource();
     fakeSearchHelper = FakeSearchHelper();
     repository = SearchRepositoryImpl(

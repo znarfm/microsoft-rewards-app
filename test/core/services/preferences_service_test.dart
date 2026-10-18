@@ -241,5 +241,13 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString(PreferencesService.keyLastOpenedDate), expected);
     });
+
+    test('isNotificationCancelled defaults to false and setNotificationCancelled updates it', () async {
+      expect(service.isNotificationCancelled, false);
+      await service.setNotificationCancelled(true);
+      expect(service.isNotificationCancelled, true);
+      await service.setNotificationCancelled(false);
+      expect(service.isNotificationCancelled, false);
+    });
   });
 }

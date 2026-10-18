@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -9,8 +10,14 @@ import '../core/di/injection_container.dart';
 import '../features/search/presentation/bloc/search_bloc.dart';
 
 @pragma('vm:entry-point')
-void notificationTapBackground(NotificationResponse response) {
+void notificationTapBackground(NotificationResponse response) async {
   if (response.actionId == 'stop_search') {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('search_cancelled_from_notification', true);
+    } catch (e) {
+      debugPrint('Background notification prefs cancel error: $e');
+    }
     try {
       sl<SearchBloc>().add(CancelSearchEvent());
     } catch (e) {
@@ -42,8 +49,12 @@ class NotificationService {
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     await _notifications.initialize(
       settings: const InitializationSettings(android: androidSettings),
-      onDidReceiveNotificationResponse: (response) {
+      onDidReceiveNotificationResponse: (response) async {
         if (response.actionId == 'stop_search') {
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('search_cancelled_from_notification', true);
+          } catch (_) {}
           try {
             sl<SearchBloc>().add(CancelSearchEvent());
           } catch (e) {

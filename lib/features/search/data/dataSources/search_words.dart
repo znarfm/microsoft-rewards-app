@@ -7,10 +7,11 @@ abstract class SearchWordsDataSource {
 }
 
 class SearchWordsDataSourceImpl implements SearchWordsDataSource {
+  static final Random _random = Random();
+  static final WordGenerator _wordGenerator = WordGenerator();
+
   @override
   String randomSentence() {
-    final random = Random();
-    final wordGenerator = WordGenerator();
-    return wordGenerator.randomSentence(2 + random.nextInt(3));
+    return _wordGenerator.randomSentence(2 + _random.nextInt(3));
   }
 }

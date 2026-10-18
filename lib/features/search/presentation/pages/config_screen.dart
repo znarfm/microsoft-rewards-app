@@ -102,7 +102,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _showLoginReminderPopup = sl<PreferencesService>().showLoginReminderPopup;
     final themeController = sl<ThemeController>();
     return ListenableBuilder(
       listenable: themeController,
@@ -257,7 +256,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                           ActionChip(
                             label: Text(_selectedTime.format(context)),
                             avatar: const Icon(Icons.access_time, size: 16),
-                            onPressed: _selectTime,
+                            onPressed: _sendDailyReminder ? _selectTime : null,
                           ),
                         ],
                       ),
@@ -295,7 +294,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                     ListTile(
                       leading: const Icon(Icons.info_outline),
                       title: const Text('Version'),
-                      subtitle: const Text('1.4.0'),
+                      subtitle: const Text('1.5.0'),
                       contentPadding: EdgeInsets.zero,
                     ),
                     ListTile(

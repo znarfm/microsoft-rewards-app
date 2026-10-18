@@ -105,6 +105,19 @@ class _SearchScreenState extends State<SearchScreen> {
               Scaffold(
                 appBar: AppBar(
                   title: const Text(Strings.appTitle),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.military_tech),
+                      tooltip: Strings.rewardsDashboardTitle,
+                      onPressed: () {
+                        // Open rewards dashboard in SearchTab webview or navigate
+                        if (_tabIndex != 0) {
+                          setState(() => _tabIndex = 0);
+                        }
+                        _searchFormKey.currentState?.loadUrl('https://rewards.bing.com');
+                      },
+                    ),
+                  ],
                 ),
                 body: IndexedStack(
                   index: _tabIndex,
@@ -116,9 +129,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 bottomNavigationBar: NavigationBar(
                   selectedIndex: _tabIndex,
                   onDestinationSelected: (index) {
-                    if (index == 0 && _tabIndex == 0) {
-                      _searchFormKey.currentState?.triggerSearchAction();
-                    } else {
+                    if (index != _tabIndex) {
                       setState(() => _tabIndex = index);
                     }
                   },

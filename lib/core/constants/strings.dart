@@ -38,4 +38,6 @@ class Strings {
   static const String dontShowAgain = "Don't show again";
   static const String loginReminderPopupLabel = 'Show login reminder on launch';
   static const String browserNotReady = 'Browser is not ready yet';
+  static const String rewardsDashboardTitle = 'Microsoft Rewards Dashboard';
+  static const String estTimeRemaining = 'Est. time remaining: ';
 }

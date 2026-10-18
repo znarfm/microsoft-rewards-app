@@ -96,6 +96,7 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       _scheduleMidnightRefresh();
       _checkAndNotifyLostStreak();
+      sl<PreferencesService>().setNotificationCancelled(false);
       if (mounted) setState(() {});
     }
     final searchBloc = context.read<SearchBloc>();
@@ -103,11 +104,14 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
 
     if (currentSearchState is SearchInProgress) {
       if (!_isAppInFocus) {
-        NotificationService.showSearchProgressNotification(
-          current: currentSearchState.currentCount,
-          total: currentSearchState.totalCount,
-          remainingSeconds: currentSearchState.remainingSeconds,
-        );
+        if (currentSearchState.currentCount != _lastTotalCount || currentSearchState.remainingSeconds == 0) {
+          _lastTotalCount = currentSearchState.currentCount;
+          NotificationService.showSearchProgressNotification(
+            current: currentSearchState.currentCount,
+            total: currentSearchState.totalCount,
+            remainingSeconds: currentSearchState.remainingSeconds,
+          );
+        }
       } else {
         NotificationService.cancelSearchProgressNotification();
       }
@@ -237,15 +241,17 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
     }
 
     if (state is SearchInProgress) {
-      _lastTotalCount = state.totalCount;
-      if (!_isAppInFocus) {
-        NotificationService.showSearchProgressNotification(
-          current: state.currentCount,
-          total: state.totalCount,
-          remainingSeconds: state.remainingSeconds,
-        );
-      } else {
-        NotificationService.cancelSearchProgressNotification();
+      if (state.currentCount != _lastTotalCount || state.remainingSeconds == 0) {
+        _lastTotalCount = state.currentCount;
+        if (!_isAppInFocus) {
+          NotificationService.showSearchProgressNotification(
+            current: state.currentCount,
+            total: state.totalCount,
+            remainingSeconds: state.remainingSeconds,
+          );
+        } else {
+          NotificationService.cancelSearchProgressNotification();
+        }
       }
     }
     if (state is SearchFailure) {

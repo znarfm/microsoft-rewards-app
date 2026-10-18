@@ -23,6 +23,10 @@ class PreferencesService {
   static const String keyBestStreak = 'best_streak';
   static const String keyLastCompletedDate = 'last_completed_date';
   static const String keyHapticFeedback = 'haptic_feedback';
+  static const String keyNotificationCancelled = 'search_cancelled_from_notification';
+
+  bool get isNotificationCancelled => _prefs.getBool(keyNotificationCancelled) ?? false;
+  Future<bool> setNotificationCancelled(bool value) => _prefs.setBool(keyNotificationCancelled, value);
 
   // Data Saver (blocks images in WebView to save data & speed up searches)
   bool get dataSaver => _prefs.getBool(keyDataSaver) ?? true;

@@ -135,7 +135,27 @@ class SearchFormState extends State<SearchForm> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+               const SizedBox(height: 12),
+              // Preset search count action chips
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (final count in [10, 20, 30, 50]) ...[
+                    ActionChip(
+                      label: Text('$count'),
+                      onPressed: isInProgress
+                          ? null
+                          : () {
+                              setState(() {
+                                _countController.text = count.toString();
+                              });
+                            },
+                    ),
+                    if (count != 50) const SizedBox(width: 8),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -272,6 +292,26 @@ class SearchFormState extends State<SearchForm> {
                                 ),
                               ],
                             ),
+                            if (state.totalCount > state.currentCount) ...[
+                              const SizedBox(height: 4),
+                              Builder(
+                                builder: (context) {
+                                  final remaining = state.totalCount - state.currentCount;
+                                  final delayVal = double.tryParse(_delayController.text) ?? 15.0;
+                                  final totalSec = (remaining * (delayVal + 0.5) + state.remainingSeconds).round();
+                                  final min = totalSec ~/ 60;
+                                  final sec = totalSec % 60;
+                                  final timeStr = min > 0 ? '~${min}m ${sec}s left' : '~${sec}s left';
+                                  return Text(
+                                    '${Strings.estTimeRemaining}$timeStr',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                             const SizedBox(height: 12),
                           ],
                         )
@@ -327,5 +367,9 @@ class SearchFormState extends State<SearchForm> {
 
   void _cancelSearch() {
     context.read<SearchBloc>().add(CancelSearchEvent());
+  }
+
+  void loadUrl(String url) {
+    _webViewController?.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
   }
 }
