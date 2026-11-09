@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.spin311.microsoft_automatic_rewards.utils.HapticsHelper
+import com.spin311.microsoft_automatic_rewards.utils.InputValidators
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -33,7 +35,12 @@ sealed interface SearchState {
         val current: Int,
         val total: Int,
         val remainingSeconds: Int = 0
-    ) : SearchState
+    ) : SearchState {
+        val fraction: Float
+            get() = if (total > 0) (current.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
+        val percent: Int
+            get() = (fraction * 100).toInt()
+    }
     data object Success : SearchState
     data object Cancelled : SearchState
     data class Failure(val message: String) : SearchState
@@ -64,9 +71,12 @@ data class AppUiState(
     val searchState: SearchState = SearchState.Idle
 )
 
-class SearchViewModel(application: Application) : AndroidViewModel(application) {
+class SearchViewModel(
+    application: Application,
+    val prefs: PreferencesRepository = PreferencesRepository(application.applicationContext),
+    private val haptics: HapticsHelper = HapticsHelper(application.applicationContext)
+) : AndroidViewModel(application) {
     private val appContext: Context = application.applicationContext
-    val prefs = PreferencesRepository(appContext)
 
     private val _uiState = MutableStateFlow(loadInitialState())
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
@@ -202,13 +212,13 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateSearchCount(text: String) {
         prefs.searchCount = text
-        val err = validateSearchCount(text)
+        val err = InputValidators.validateSearchCount(text)
         _uiState.update { it.copy(searchCountText = text, countError = err) }
     }
 
     fun updateSearchDelay(text: String) {
         prefs.searchDelay = text
-        val err = validateDelay(text)
+        val err = InputValidators.validateDelay(text)
         _uiState.update { it.copy(searchDelayText = text, delayError = err) }
     }
 
@@ -235,7 +245,8 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                     context = appContext,
                     current = state.current,
                     total = state.total,
-                    remainingSeconds = state.remainingSeconds
+                    remainingSeconds = state.remainingSeconds,
+                    precomputedPercent = state.percent
                 )
             }
         }
@@ -246,8 +257,8 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
         val countStr = _uiState.value.searchCountText.trim()
         val delayStr = _uiState.value.searchDelayText.trim()
-        val countErr = validateSearchCount(countStr)
-        val delayErr = validateDelay(delayStr)
+        val countErr = InputValidators.validateSearchCount(countStr)
+        val delayErr = InputValidators.validateDelay(delayStr)
 
         if (countErr != null || delayErr != null) {
             _uiState.update {
@@ -395,41 +406,11 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun triggerCompletionHaptics() {
-        try {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vm = appContext.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vm.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                appContext.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
-            if (!vibrator.hasVibrator()) return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(
-                    VibrationEffect.createWaveform(longArrayOf(0, 70, 80, 120), -1)
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator.vibrate(200)
-            }
-        } catch (_: Throwable) {
-        }
+        haptics.triggerCompletionPattern()
     }
 
     companion object {
-        fun validateSearchCount(value: String?): String? {
-            if (value.isNullOrBlank()) return "Required"
-            val count = value.trim().toIntOrNull() ?: return "Enter a valid number"
-            if (count <= 0) return "Must be > 0"
-            if (count > 50) return "Max 50 searches"
-            return null
-        }
-
-        fun validateDelay(value: String?): String? {
-            if (value.isNullOrBlank()) return "Required"
-            val delay = value.trim().toDoubleOrNull() ?: return "Enter a valid number"
-            if (delay < 0.5) return "Min 0.5 seconds"
-            return null
-        }
+        fun validateSearchCount(value: String?): String? = InputValidators.validateSearchCount(value)
+        fun validateDelay(value: String?): String? = InputValidators.validateDelay(value)
     }
 }

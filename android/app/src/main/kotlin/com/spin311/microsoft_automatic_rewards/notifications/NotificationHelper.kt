@@ -67,7 +67,8 @@ object NotificationHelper {
         context: Context,
         current: Int,
         total: Int,
-        remainingSeconds: Int
+        remainingSeconds: Int,
+        precomputedPercent: Int? = null
     ) {
         if (current <= 1 && remainingSeconds == 0) {
             dismissedByUser = false
@@ -77,7 +78,7 @@ object NotificationHelper {
         ensureChannels(context)
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val percent = if (total > 0) ((current.toDouble() / total.toDouble()) * 100).toInt() else 0
+        val percent = precomputedPercent ?: if (total > 0) ((current.toDouble() / total.toDouble()) * 100).toInt() else 0
         val bodyText = if (remainingSeconds > 0) {
             "$current/$total completed ($percent%) • Next in ${remainingSeconds}s"
         } else {

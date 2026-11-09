@@ -76,9 +76,8 @@ import com.spin311.microsoft_automatic_rewards.ui.components.ExpressiveIconButto
 import com.spin311.microsoft_automatic_rewards.ui.components.NavTabItem
 import com.spin311.microsoft_automatic_rewards.ui.components.WavyLinearProgressIndicator
 import com.spin311.microsoft_automatic_rewards.ui.theme.AppThemeMode
+import com.spin311.microsoft_automatic_rewards.data.PreferencesRepository
 import kotlin.math.roundToInt
-
-private val PRESET_COUNTS = listOf(10, 20, 30, 50)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
@@ -394,7 +393,7 @@ private fun SearchTabContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val currentCount = uiState.searchCountText.trim().toIntOrNull()
-                    PRESET_COUNTS.forEach { preset ->
+                    PreferencesRepository.PRESET_SEARCH_COUNTS.forEach { preset ->
                         ExpressiveChoiceChip(
                             label = "$preset",
                             selected = currentCount == preset,
@@ -451,12 +450,8 @@ private fun SearchTabContent(
                 ) {
                     val progressState = uiState.searchState as? SearchState.InProgress
                     if (progressState != null) {
-                        val frac = if (progressState.total > 0) {
-                            progressState.current.toFloat() / progressState.total.toFloat()
-                        } else {
-                            0f
-                        }
-                        val percent = (frac * 100).roundToInt().coerceIn(0, 100)
+                        val frac = progressState.fraction
+                        val percent = progressState.percent
                         val delaySec = uiState.searchDelayText.toDoubleOrNull() ?: 15.0
                         val remainingSearches = (progressState.total - progressState.current).coerceAtLeast(0)
                         val estTotalSeconds = (remainingSearches * (delaySec + 0.5)).roundToInt() +

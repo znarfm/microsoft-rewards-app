@@ -102,6 +102,35 @@ class RewardsUnitTest {
     }
 
     @Test
+    fun `SearchState InProgress computes accurate progress fraction and percent`() {
+        val state0 = com.spin311.microsoft_automatic_rewards.ui.SearchState.InProgress(current = 0, total = 20)
+        assertEquals(0f, state0.fraction, 0.001f)
+        assertEquals(0, state0.percent)
+
+        val stateHalf = com.spin311.microsoft_automatic_rewards.ui.SearchState.InProgress(current = 10, total = 20)
+        assertEquals(0.5f, stateHalf.fraction, 0.001f)
+        assertEquals(50, stateHalf.percent)
+
+        val stateFull = com.spin311.microsoft_automatic_rewards.ui.SearchState.InProgress(current = 20, total = 20)
+        assertEquals(1.0f, stateFull.fraction, 0.001f)
+        assertEquals(100, stateFull.percent)
+    }
+
+    @Test
+    fun `InputValidators enforces count and delay limits directly`() {
+        assertNull(com.spin311.microsoft_automatic_rewards.utils.InputValidators.validateSearchCount("30"))
+        assertNotNull(com.spin311.microsoft_automatic_rewards.utils.InputValidators.validateSearchCount("0"))
+        assertNotNull(com.spin311.microsoft_automatic_rewards.utils.InputValidators.validateSearchCount("51"))
+        assertNull(com.spin311.microsoft_automatic_rewards.utils.InputValidators.validateDelay("10"))
+        assertNotNull(com.spin311.microsoft_automatic_rewards.utils.InputValidators.validateDelay("0.4"))
+    }
+
+    @Test
+    fun `PRESET_SEARCH_COUNTS contains valid standard preset values`() {
+        assertEquals(listOf(10, 20, 30, 50), PreferencesRepository.PRESET_SEARCH_COUNTS)
+    }
+
+    @Test
     fun `AppThemeMode maps storage keys accurately`() {
         assertEquals(AppThemeMode.SYSTEM, AppThemeMode.fromStorageKey("system"))
         assertEquals(AppThemeMode.LIGHT, AppThemeMode.fromStorageKey("light"))
