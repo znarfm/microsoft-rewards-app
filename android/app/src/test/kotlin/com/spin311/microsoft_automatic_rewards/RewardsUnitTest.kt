@@ -131,6 +131,13 @@ class RewardsUnitTest {
     }
 
     @Test
+    fun `SearchViewModel has 1-arg Application constructor for ViewModelProvider`() {
+        val constructor = com.spin311.microsoft_automatic_rewards.ui.SearchViewModel::class.java
+            .getConstructor(android.app.Application::class.java)
+        assertNotNull(constructor)
+    }
+
+    @Test
     fun `AppThemeMode maps storage keys accurately`() {
         assertEquals(AppThemeMode.SYSTEM, AppThemeMode.fromStorageKey("system"))
         assertEquals(AppThemeMode.LIGHT, AppThemeMode.fromStorageKey("light"))

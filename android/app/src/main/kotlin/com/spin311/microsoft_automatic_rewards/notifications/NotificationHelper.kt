@@ -31,7 +31,7 @@ object NotificationHelper {
 
     fun ensureChannels(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
 
         val reminderChannel = NotificationChannel(
             DAILY_REMINDER_CHANNEL_ID,
@@ -203,7 +203,7 @@ object NotificationHelper {
 
     fun cancelPromotedSearchProgress(context: Context) {
         dismissedByUser = false
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
         manager.cancel(PROGRESS_NOTIFICATION_ID)
     }
 
@@ -215,7 +215,7 @@ object NotificationHelper {
         isReminder: Boolean = false
     ) {
         ensureChannels(context)
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
         val channelId = if (isReminder) DAILY_REMINDER_CHANNEL_ID else SEARCH_STATUS_CHANNEL_ID
 
         val launchIntent = Intent(context, MainActivity::class.java).apply {

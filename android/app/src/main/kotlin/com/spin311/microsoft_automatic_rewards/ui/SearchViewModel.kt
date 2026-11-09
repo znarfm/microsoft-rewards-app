@@ -73,9 +73,17 @@ data class AppUiState(
 
 class SearchViewModel(
     application: Application,
-    val prefs: PreferencesRepository = PreferencesRepository(application.applicationContext),
-    private val haptics: HapticsHelper = HapticsHelper(application.applicationContext)
+    val prefs: PreferencesRepository,
+    private val haptics: HapticsHelper
 ) : AndroidViewModel(application) {
+
+    // Default 1-arg constructor invoked via reflection by ViewModelProvider.AndroidViewModelFactory
+    constructor(application: Application) : this(
+        application = application,
+        prefs = PreferencesRepository(application.applicationContext),
+        haptics = HapticsHelper(application.applicationContext)
+    )
+
     private val appContext: Context = application.applicationContext
 
     private val _uiState = MutableStateFlow(loadInitialState())

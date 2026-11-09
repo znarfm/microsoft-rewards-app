@@ -24,33 +24,52 @@ class PreferencesRepository(context: Context) {
         }
     }
 
+    private fun getBooleanCompat(key: String, default: Boolean): Boolean {
+        val raw = prefs.all[key]
+        return when (raw) {
+            is Boolean -> raw
+            is Number -> raw.toInt() != 0
+            is String -> raw.toBooleanStrictOrNull() ?: default
+            else -> default
+        }
+    }
+
+    private fun getStringCompat(key: String, default: String? = null): String? {
+        val raw = prefs.all[key]
+        return when (raw) {
+            is String -> raw
+            null -> default
+            else -> raw.toString()
+        }
+    }
+
     private fun putIntCompat(key: String, value: Int) {
         // Store as Long to remain 100% compatible with FlutterSharedPreferences
         prefs.edit().putLong(key, value.toLong()).apply()
     }
 
     var isLoggedIn: Boolean
-        get() = prefs.getBoolean(KEY_LOGGED_IN, false)
+        get() = getBooleanCompat(KEY_LOGGED_IN, false)
         set(value) = prefs.edit().putBoolean(KEY_LOGGED_IN, value).apply()
 
     var searchCount: String
-        get() = prefs.getString(KEY_SEARCH_COUNT, DEFAULT_SEARCH_COUNT) ?: DEFAULT_SEARCH_COUNT
+        get() = getStringCompat(KEY_SEARCH_COUNT, DEFAULT_SEARCH_COUNT) ?: DEFAULT_SEARCH_COUNT
         set(value) = prefs.edit().putString(KEY_SEARCH_COUNT, value).apply()
 
     var searchDelay: String
-        get() = prefs.getString(KEY_SEARCH_DELAY, DEFAULT_SEARCH_DELAY) ?: DEFAULT_SEARCH_DELAY
+        get() = getStringCompat(KEY_SEARCH_DELAY, DEFAULT_SEARCH_DELAY) ?: DEFAULT_SEARCH_DELAY
         set(value) = prefs.edit().putString(KEY_SEARCH_DELAY, value).apply()
 
     var sendDailyReminder: Boolean
-        get() = prefs.getBoolean(KEY_SEND_DAILY_REMINDER, DEFAULT_SEND_DAILY_REMINDER)
+        get() = getBooleanCompat(KEY_SEND_DAILY_REMINDER, DEFAULT_SEND_DAILY_REMINDER)
         set(value) = prefs.edit().putBoolean(KEY_SEND_DAILY_REMINDER, value).apply()
 
     var keepScreenOn: Boolean
-        get() = prefs.getBoolean(KEY_KEEP_SCREEN_ON, DEFAULT_KEEP_SCREEN_ON)
+        get() = getBooleanCompat(KEY_KEEP_SCREEN_ON, DEFAULT_KEEP_SCREEN_ON)
         set(value) = prefs.edit().putBoolean(KEY_KEEP_SCREEN_ON, value).apply()
 
     var showLoginReminderPopup: Boolean
-        get() = prefs.getBoolean(KEY_SHOW_LOGIN_REMINDER_POPUP, DEFAULT_SHOW_LOGIN_REMINDER_POPUP)
+        get() = getBooleanCompat(KEY_SHOW_LOGIN_REMINDER_POPUP, DEFAULT_SHOW_LOGIN_REMINDER_POPUP)
         set(value) = prefs.edit().putBoolean(KEY_SHOW_LOGIN_REMINDER_POPUP, value).apply()
 
     var reminderHour: Int
@@ -62,23 +81,23 @@ class PreferencesRepository(context: Context) {
         set(value) = putIntCompat(KEY_REMINDER_MINUTE, value)
 
     var lastOpenedDate: String?
-        get() = prefs.getString(KEY_LAST_OPENED_DATE, null)
+        get() = getStringCompat(KEY_LAST_OPENED_DATE, null)
         set(value) = prefs.edit().putString(KEY_LAST_OPENED_DATE, value).apply()
 
     var themeMode: AppThemeMode
-        get() = AppThemeMode.fromStorageKey(prefs.getString(KEY_THEME_MODE, null))
+        get() = AppThemeMode.fromStorageKey(getStringCompat(KEY_THEME_MODE, null))
         set(value) = prefs.edit().putString(KEY_THEME_MODE, value.storageKey).apply()
 
     var amoledOverlay: Boolean
-        get() = prefs.getBoolean(KEY_AMOLED_SCREEN_OFF, DEFAULT_AMOLED_SCREEN_OFF)
+        get() = getBooleanCompat(KEY_AMOLED_SCREEN_OFF, DEFAULT_AMOLED_SCREEN_OFF)
         set(value) = prefs.edit().putBoolean(KEY_AMOLED_SCREEN_OFF, value).apply()
 
     var dataSaver: Boolean
-        get() = prefs.getBoolean(KEY_DATA_SAVER, DEFAULT_DATA_SAVER)
+        get() = getBooleanCompat(KEY_DATA_SAVER, DEFAULT_DATA_SAVER)
         set(value) = prefs.edit().putBoolean(KEY_DATA_SAVER, value).apply()
 
     var hapticFeedback: Boolean
-        get() = prefs.getBoolean(KEY_HAPTIC_FEEDBACK, DEFAULT_HAPTIC_FEEDBACK)
+        get() = getBooleanCompat(KEY_HAPTIC_FEEDBACK, DEFAULT_HAPTIC_FEEDBACK)
         set(value) = prefs.edit().putBoolean(KEY_HAPTIC_FEEDBACK, value).apply()
 
     var completionStreak: Int
@@ -90,11 +109,11 @@ class PreferencesRepository(context: Context) {
         set(value) = putIntCompat(KEY_BEST_STREAK, value)
 
     var lastCompletedDate: String?
-        get() = prefs.getString(KEY_LAST_COMPLETED_DATE, null)
+        get() = getStringCompat(KEY_LAST_COMPLETED_DATE, null)
         set(value) = prefs.edit().putString(KEY_LAST_COMPLETED_DATE, value).apply()
 
     var searchCancelledFromNotification: Boolean
-        get() = prefs.getBoolean(KEY_SEARCH_CANCELLED_FROM_NOTIFICATION, false)
+        get() = getBooleanCompat(KEY_SEARCH_CANCELLED_FROM_NOTIFICATION, false)
         set(value) = prefs.edit().putBoolean(KEY_SEARCH_CANCELLED_FROM_NOTIFICATION, value).apply()
 
     fun isCompletedToday(now: Calendar = Calendar.getInstance()): Boolean {
