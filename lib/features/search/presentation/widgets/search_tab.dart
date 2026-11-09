@@ -13,10 +13,16 @@ import '../../../../notifications/notification_service.dart';
 import '../bloc/search_bloc.dart';
 import 'search_form.dart';
 
-/// Search tab container wrapping SearchForm, streak indicator, and listening for SearchBloc state changes.
+/// Search tab container wrapping SearchForm and listening for SearchBloc state changes.
 class SearchTab extends StatefulWidget {
   final GlobalKey<SearchFormState>? formKey;
-  const SearchTab({super.key, this.formKey});
+  final VoidCallback? onStatusChanged;
+
+  const SearchTab({
+    super.key,
+    this.formKey,
+    this.onStatusChanged,
+  });
 
   @override
   State<SearchTab> createState() => _SearchTabState();
@@ -55,6 +61,7 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
       if (mounted) {
         _checkAndNotifyLostStreak();
         setState(() {});
+        widget.onStatusChanged?.call();
         _scheduleMidnightRefresh();
       }
     });
@@ -82,7 +89,7 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
           backgroundColor: Colors.orange.shade800,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(16.0),
           ),
           duration: const Duration(seconds: 4),
         ),
@@ -97,21 +104,22 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
       _scheduleMidnightRefresh();
       _checkAndNotifyLostStreak();
       sl<PreferencesService>().setNotificationCancelled(false);
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+        widget.onStatusChanged?.call();
+      }
     }
     final searchBloc = context.read<SearchBloc>();
     final currentSearchState = searchBloc.state;
 
     if (currentSearchState is SearchInProgress) {
       if (!_isAppInFocus) {
-        if (currentSearchState.currentCount != _lastTotalCount || currentSearchState.remainingSeconds == 0) {
-          _lastTotalCount = currentSearchState.currentCount;
-          NotificationService.showSearchProgressNotification(
-            current: currentSearchState.currentCount,
-            total: currentSearchState.totalCount,
-            remainingSeconds: currentSearchState.remainingSeconds,
-          );
-        }
+        _lastTotalCount = currentSearchState.currentCount;
+        NotificationService.showSearchProgressNotification(
+          current: currentSearchState.currentCount,
+          total: currentSearchState.totalCount,
+          remainingSeconds: currentSearchState.remainingSeconds,
+        );
       } else {
         NotificationService.cancelSearchProgressNotification();
       }
@@ -120,115 +128,16 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final prefs = sl<PreferencesService>();
-    final isDoneToday = prefs.isCompletedToday;
-    final streak = prefs.completionStreak;
-    final bestStreak = prefs.bestStreak;
-
     return Padding(
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      padding: const EdgeInsets.fromLTRB(
+        AppConstants.defaultPadding,
+        8,
+        AppConstants.defaultPadding,
+        AppConstants.defaultPadding,
+      ),
       child: BlocListener<SearchBloc, SearchState>(
         listener: _handleStateChanges,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isDoneToday
-                          ? Colors.green.withAlpha(25)
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isDoneToday
-                            ? Colors.green.withAlpha(70)
-                            : Theme.of(context).colorScheme.outlineVariant.withAlpha(60),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isDoneToday ? Icons.check_circle : Icons.schedule,
-                          size: 14,
-                          color: isDoneToday ? Colors.green : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          isDoneToday ? 'Completed today' : 'Pending today',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isDoneToday ? Colors.green : Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (streak > 0)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withAlpha(25),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.orange.withAlpha(80)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text('🔥', style: TextStyle(fontSize: 12)),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$streak day streak',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.orangeAccent
-                                  : Colors.deepOrange,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else if (bestStreak > 0)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outlineVariant.withAlpha(60),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text('🏆', style: TextStyle(fontSize: 12)),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Best: $bestStreak days',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SearchForm(key: widget.formKey),
-            ),
-          ],
-        ),
+        child: SearchForm(key: widget.formKey),
       ),
     );
   }
@@ -241,17 +150,15 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
     }
 
     if (state is SearchInProgress) {
-      if (state.currentCount != _lastTotalCount || state.remainingSeconds == 0) {
-        _lastTotalCount = state.currentCount;
-        if (!_isAppInFocus) {
-          NotificationService.showSearchProgressNotification(
-            current: state.currentCount,
-            total: state.totalCount,
-            remainingSeconds: state.remainingSeconds,
-          );
-        } else {
-          NotificationService.cancelSearchProgressNotification();
-        }
+      _lastTotalCount = state.currentCount;
+      if (!_isAppInFocus) {
+        NotificationService.showSearchProgressNotification(
+          current: state.currentCount,
+          total: state.totalCount,
+          remainingSeconds: state.remainingSeconds,
+        );
+      } else {
+        NotificationService.cancelSearchProgressNotification();
       }
     }
     if (state is SearchFailure) {
@@ -280,7 +187,7 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
           backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(18.0),
           ),
           duration: const Duration(seconds: 4),
         ),
@@ -292,7 +199,10 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
       if (prefs.hapticFeedback) {
         HapticFeedback.mediumImpact();
       }
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+        widget.onStatusChanged?.call();
+      }
 
       if (!_isAppInFocus) {
         NotificationService.showSearchCompletedNotification(
@@ -317,7 +227,7 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(18.0),
           ),
           duration: const Duration(seconds: 4),
         ),
@@ -341,7 +251,7 @@ class _SearchTabState extends State<SearchTab> with WidgetsBindingObserver {
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(18.0),
           ),
           duration: const Duration(seconds: 2),
         ),

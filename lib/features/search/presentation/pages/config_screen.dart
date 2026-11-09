@@ -5,7 +5,9 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../../../../core/constants/strings.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/preferences_service.dart';
+import '../../../../core/theme/expressive_motion.dart';
 import '../../../../core/theme/theme_controller.dart';
+import '../../../../core/widgets/expressive_chip.dart';
 import '../../../../notifications/notification_service.dart';
 
 /// Second tab of the main screen. Holds the theme selector, daily-reminder
@@ -149,10 +151,10 @@ class _ConfigScreenState extends State<ConfigScreen> {
                     ),
                     const Divider(height: 24),
                     AnimatedSize(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOutCubic,
+                      duration: ExpressiveMotion.defaultSpatialDuration(context),
+                      curve: ExpressiveMotion.defaultSpatialCurve(context),
                       child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 200),
+                        duration: ExpressiveMotion.defaultEffectsDuration,
                         opacity: themeController.mode == AppThemeMode.amoled
                             ? 1.0
                             : 0.0,
@@ -253,10 +255,13 @@ class _ConfigScreenState extends State<ConfigScreen> {
                         children: [
                           const Text(Strings.dailyReminderAt),
                           const SizedBox(width: 8),
-                          ActionChip(
-                            label: Text(_selectedTime.format(context)),
-                            avatar: const Icon(Icons.access_time, size: 16),
-                            onPressed: _sendDailyReminder ? _selectTime : null,
+                          ExpressiveChoiceChip(
+                            label: _selectedTime.format(context),
+                            icon: Icons.access_time_rounded,
+                            selected: _sendDailyReminder,
+                            onSelected: _sendDailyReminder
+                                ? (_) => _selectTime()
+                                : null,
                           ),
                         ],
                       ),
@@ -294,7 +299,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                     ListTile(
                       leading: const Icon(Icons.info_outline),
                       title: const Text('Version'),
-                      subtitle: const Text('1.5.0'),
+                      subtitle: const Text('2.0.0'),
                       contentPadding: EdgeInsets.zero,
                     ),
                     ListTile(
@@ -320,7 +325,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
         text,
         style: TextStyle(
           fontSize: 13,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           letterSpacing: 0.8,
           color: Theme.of(context).colorScheme.primary,
         ),
@@ -339,50 +344,22 @@ class _ConfigScreenState extends State<ConfigScreen> {
 
   IconData _themeIcon(AppThemeMode mode) {
     return switch (mode) {
-      AppThemeMode.system => Icons.brightness_auto,
-      AppThemeMode.light => Icons.light_mode,
-      AppThemeMode.dark => Icons.dark_mode,
-      AppThemeMode.amoled => Icons.contrast,
+      AppThemeMode.system => Icons.brightness_auto_rounded,
+      AppThemeMode.light => Icons.light_mode_rounded,
+      AppThemeMode.dark => Icons.dark_mode_rounded,
+      AppThemeMode.amoled => Icons.contrast_rounded,
     };
   }
 
   Widget _buildThemeChip(
       BuildContext context, ThemeController controller, AppThemeMode mode) {
     final isSelected = controller.mode == mode;
-    final colorScheme = Theme.of(context).colorScheme;
-    return ChoiceChip(
-      showCheckmark: false,
-      avatar: Icon(
-        _themeIcon(mode),
-        size: 18,
-        color: isSelected
-            ? colorScheme.onPrimaryContainer
-            : colorScheme.onSurfaceVariant,
-      ),
-      label: Center(
-        child: Text(
-          _themeLabel(mode),
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected
-                ? colorScheme.onPrimaryContainer
-                : colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ),
+    return ExpressiveChoiceChip(
+      label: _themeLabel(mode),
+      icon: _themeIcon(mode),
       selected: isSelected,
-      selectedColor: colorScheme.primaryContainer,
-      backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(100),
-      side: BorderSide(
-        color: isSelected
-            ? colorScheme.primary.withAlpha(180)
-            : colorScheme.outlineVariant.withAlpha(140),
-        width: isSelected ? 1.5 : 1,
-      ),
-      onSelected: (selected) {
-        if (selected) controller.setMode(mode);
-      },
+      expand: true,
+      onSelected: (_) => controller.setMode(mode),
     );
   }
 }

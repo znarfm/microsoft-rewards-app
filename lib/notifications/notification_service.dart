@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -28,6 +29,8 @@ void notificationTapBackground(NotificationResponse response) async {
 
 class NotificationService {
   static final _notifications = FlutterLocalNotificationsPlugin();
+  static const _platformChannel =
+      MethodChannel('com.spin311.microsoft_automatic_rewards/shortcuts');
   static const int _reminderId = 0;
 
   static Future<void> init() async {
@@ -163,6 +166,23 @@ class NotificationService {
   }) async {
     _isSearchActive = true;
 
+    // On Android, prefer native Promoted Ongoing Notification (Android 16 Live Update)
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      try {
+        await _platformChannel.invokeMethod('showPromotedSearchProgress', {
+          'current': current,
+          'total': total,
+          'remainingSeconds': remainingSeconds,
+        });
+        if (!_isSearchActive) {
+          await _platformChannel.invokeMethod('cancelPromotedSearchProgress');
+        }
+        return;
+      } catch (e) {
+        debugPrint('Promoted notification fallback to local_notifications: $e');
+      }
+    }
+
     final percent = total > 0 ? ((current / total) * 100).round() : 0;
 
     await _notifications.show(
@@ -205,7 +225,7 @@ class NotificationService {
 
   static Future<void> showSearchCompletedNotification({required int total}) async {
     _isSearchActive = false;
-    await _notifications.cancel(id: _progressNotificationId);
+    await cancelSearchProgressNotification();
 
     await _notifications.show(
       id: _progressNotificationId,
@@ -228,7 +248,7 @@ class NotificationService {
 
   static Future<void> showSearchFailedNotification({required String message}) async {
     _isSearchActive = false;
-    await _notifications.cancel(id: _progressNotificationId);
+    await cancelSearchProgressNotification();
 
     await _notifications.show(
       id: _progressNotificationId,
@@ -251,6 +271,11 @@ class NotificationService {
 
   static Future<void> cancelSearchProgressNotification() async {
     _isSearchActive = false;
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      try {
+        await _platformChannel.invokeMethod('cancelPromotedSearchProgress');
+      } catch (_) {}
+    }
     await _notifications.cancel(id: _progressNotificationId);
   }
 }

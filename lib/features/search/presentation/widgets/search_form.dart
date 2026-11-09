@@ -8,9 +8,12 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/strings.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/preferences_service.dart';
+import '../../../../core/theme/expressive_motion.dart';
 import '../../../../core/utils/validators/input_validators.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/expressive_chip.dart';
+import '../../../../core/widgets/wavy_progress_indicator.dart';
 import '../bloc/search_bloc.dart';
 
 /// Form component handling count/delay inputs, InAppWebView container,
@@ -49,10 +52,16 @@ class SearchFormState extends State<SearchForm> {
     super.initState();
     saveAppOpenedToday();
     _loadSavedValues();
+    _countController.addListener(_onCountTextChanged);
+  }
+
+  void _onCountTextChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _countController.removeListener(_onCountTextChanged);
     saveCountValue();
     saveDelayValue();
     _countController.dispose();
@@ -92,6 +101,9 @@ class SearchFormState extends State<SearchForm> {
 
   @override
   Widget build(BuildContext context) {
+    final spatialCurve = ExpressiveMotion.defaultSpatialCurve(context);
+    final spatialDuration = ExpressiveMotion.defaultSpatialDuration(context);
+
     return Form(
       key: _formKey,
       child: BlocBuilder<SearchBloc, SearchState>(
@@ -100,31 +112,33 @@ class SearchFormState extends State<SearchForm> {
           final percent = (isInProgress && state.totalCount > 0)
               ? ((state.currentCount / state.totalCount) * 100).toInt()
               : 0;
-          final primaryColor = Theme.of(context).colorScheme.primary;
-          final errorColor = Theme.of(context).colorScheme.error;
-          final onErrorColor = Theme.of(context).colorScheme.onError;
+          final colorScheme = Theme.of(context).colorScheme;
+          final primaryColor = colorScheme.primary;
+          final errorColor = colorScheme.error;
+          final onErrorColor = colorScheme.onError;
+          final currentCountText = _countController.text.trim();
 
           return Column(
             children: [
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.outlineVariant,
+                      color: colorScheme.outlineVariant.withAlpha(140),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(12),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withAlpha(14),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
                   child: RepaintBoundary(
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(11),
+                      borderRadius: BorderRadius.circular(19),
                       child: InAppWebView(
                         initialUrlRequest: _initialBingRequest,
                         onWebViewCreated: (controller) =>
@@ -135,27 +149,29 @@ class SearchFormState extends State<SearchForm> {
                   ),
                 ),
               ),
-               const SizedBox(height: 12),
-              // Preset search count action chips
+              const SizedBox(height: 12),
+              // M3 Expressive dual-morphing preset search count chips
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   for (final count in [10, 20, 30, 50]) ...[
-                    ActionChip(
-                      label: Text('$count'),
-                      onPressed: isInProgress
-                          ? null
-                          : () {
-                              setState(() {
+                    Expanded(
+                      child: ExpressiveChoiceChip(
+                        label: '$count',
+                        expand: true,
+                        selected: currentCountText == '$count',
+                        onSelected: isInProgress
+                            ? null
+                            : (_) {
                                 _countController.text = count.toString();
-                              });
-                            },
+                              },
+                      ),
                     ),
                     if (count != 50) const SizedBox(width: 8),
                   ],
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -183,10 +199,10 @@ class SearchFormState extends State<SearchForm> {
                 ],
               ),
               AnimatedSize(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOutCubic,
+                duration: spatialDuration,
+                curve: spatialCurve,
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
+                  duration: ExpressiveMotion.defaultEffectsDuration,
                   child: isInProgress
                       ? Column(
                           key: const ValueKey('progress_active'),
@@ -201,7 +217,7 @@ class SearchFormState extends State<SearchForm> {
                                     'Next search in ${state.remainingSeconds}s…',
                                     style: TextStyle(
                                       fontSize: 15,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
                                       color: primaryColor,
                                     ),
                                   )
@@ -209,16 +225,24 @@ class SearchFormState extends State<SearchForm> {
                                   Text(
                                     'Searching.',
                                     style: TextStyle(
-                                        fontSize: 16, color: primaryColor),
+                                      fontSize: 15.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: primaryColor,
+                                    ),
                                   ),
                                   AnimatedTextKit(
                                     repeatForever: true,
                                     animatedTexts: [
-                                      TyperAnimatedText('..',
-                                          textStyle: TextStyle(
-                                              fontSize: 16, color: primaryColor),
-                                          speed:
-                                              const Duration(milliseconds: 1000)),
+                                      TyperAnimatedText(
+                                        '..',
+                                        textStyle: TextStyle(
+                                          fontSize: 15.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: primaryColor,
+                                        ),
+                                        speed:
+                                            const Duration(milliseconds: 1000),
+                                      ),
                                     ],
                                     isRepeatingAnimation: true,
                                     pause: const Duration(milliseconds: 200),
@@ -229,9 +253,10 @@ class SearchFormState extends State<SearchForm> {
                             ),
                             const SizedBox(height: 8),
 
-                            // Animated linear progress bar
+                            // M3 Expressive Wavy Linear Progress Indicator
                             TweenAnimationBuilder<double>(
-                              duration: const Duration(milliseconds: 300),
+                              duration: spatialDuration,
+                              curve: spatialCurve,
                               tween: Tween<double>(
                                 begin: 0,
                                 end: state.totalCount > 0
@@ -241,18 +266,13 @@ class SearchFormState extends State<SearchForm> {
                               builder: (context, value, _) {
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 32),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: LinearProgressIndicator(
-                                      value: value,
-                                      minHeight: 10,
-                                      backgroundColor: Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainerHighest,
-                                      color: primaryColor,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                                    horizontal: 20,
+                                  ),
+                                  child: WavyLinearProgressIndicator(
+                                    value: value,
+                                    color: primaryColor,
+                                    trackColor:
+                                        colorScheme.surfaceContainerHighest,
                                   ),
                                 );
                               },
@@ -267,63 +287,76 @@ class SearchFormState extends State<SearchForm> {
                                 Text(
                                   '${state.currentCount}/${state.totalCount} completed',
                                   style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onSurface,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 2),
+                                    horizontal: 9,
+                                    vertical: 2.5,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: primaryColor.withAlpha(38),
-                                    borderRadius: BorderRadius.circular(12),
+                                    color: colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
                                     '$percent%',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: primaryColor,
+                                      fontWeight: FontWeight.w800,
+                                      color: colorScheme.onPrimaryContainer,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                             if (state.totalCount > state.currentCount) ...[
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 3),
                               Builder(
                                 builder: (context) {
-                                  final remaining = state.totalCount - state.currentCount;
-                                  final delayVal = double.tryParse(_delayController.text) ?? 15.0;
-                                  final totalSec = (remaining * (delayVal + 0.5) + state.remainingSeconds).round();
+                                  final remaining =
+                                      state.totalCount - state.currentCount;
+                                  final delayVal =
+                                      double.tryParse(_delayController.text) ??
+                                          15.0;
+                                  final totalSec =
+                                      (remaining * (delayVal + 0.5) +
+                                              state.remainingSeconds)
+                                          .round();
                                   final min = totalSec ~/ 60;
                                   final sec = totalSec % 60;
-                                  final timeStr = min > 0 ? '~${min}m ${sec}s left' : '~${sec}s left';
+                                  final timeStr = min > 0
+                                      ? '~${min}m ${sec}s left'
+                                      : '~${sec}s left';
                                   return Text(
                                     '${Strings.estTimeRemaining}$timeStr',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      color: colorScheme.onSurfaceVariant,
                                     ),
                                   );
                                 },
                               ),
                             ],
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 10),
                           ],
                         )
                       : const SizedBox(
                           key: ValueKey('progress_idle'),
-                          height: 12,
+                          height: 10,
                         ),
                 ),
               ),
               CustomButton(
                 onPressed: isInProgress ? _cancelSearch : _startSearch,
                 text: _getButtonText(state),
+                icon: isInProgress
+                    ? Icons.stop_rounded
+                    : Icons.play_arrow_rounded,
+                isActiveState: isInProgress,
                 backgroundColor: isInProgress ? errorColor : null,
                 foregroundColor: isInProgress ? onErrorColor : null,
               ),

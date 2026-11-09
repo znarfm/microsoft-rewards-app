@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants/app_constants.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -28,8 +27,6 @@ class CustomTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.all(AppConstants.defaultPadding),
       ),
       validator: validator,
     );

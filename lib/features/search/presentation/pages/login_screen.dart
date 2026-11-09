@@ -4,6 +4,8 @@ import 'package:microsoft_automatic_rewards/features/search/presentation/pages/s
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/preferences_service.dart';
+import '../../../../core/widgets/custom_button.dart';
+import '../../../../core/widgets/wavy_progress_indicator.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,8 +35,16 @@ class _LoginScreenState extends State<LoginScreen> {
           title: const Text("Login to Microsoft Account"),
           bottom: _showWebView && _progress < 1.0
               ? PreferredSize(
-                  preferredSize: const Size.fromHeight(2),
-                  child: LinearProgressIndicator(value: _progress == 0 ? null : _progress),
+                  preferredSize: const Size.fromHeight(14),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: WavyLinearProgressIndicator(
+                      value: _progress == 0 ? null : _progress,
+                      height: 12,
+                      strokeWidth: 3.5,
+                      amplitude: 2.5,
+                    ),
+                  ),
                 )
               : null,
         ),
@@ -51,10 +61,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
                             color: colorScheme.primaryContainer,
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(24),
                           ),
                           child: Icon(
                             Icons.stars_rounded,
@@ -85,17 +95,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 24),
-                        FilledButton.icon(
+                        CustomButton(
                           onPressed: () {
                             setState(() {
                               _showWebView = true;
                             });
                           },
-                          icon: const Icon(Icons.login),
-                          label: const Text(
-                            "Sign In",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
+                          icon: Icons.login_rounded,
+                          text: "Sign In",
                         ),
                       ],
                     ),
@@ -149,16 +156,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: _finishLogin,
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text(
-                      'Continue',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
+                CustomButton(
+                  onPressed: _finishLogin,
+                  icon: Icons.check_circle_outline_rounded,
+                  text: 'Continue',
                 ),
               ],
             ],

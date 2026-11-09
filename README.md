@@ -22,13 +22,15 @@ An Android-first Flutter app that signs you into your Microsoft account inside a
 ## Features
 
 - **Automated Bing searches** - configurable count and delay between queries, with live progress and cancel support
+- **Material 3 Expressive UI** - bouncy spatial spring physics, dual shape-morphing buttons & chips, wavy linear progress indicator, and floating pill navigation bar (with automatic reduced-motion accessibility fallback)
+- **Android 16 Live Updates** - promoted ongoing search progress notifications (`ProgressStyle` + status bar chip count) when running in background
 - **Microsoft sign-in** - login through the official Microsoft account flow in an embedded web view, session persisted across restarts
 - **Material You theming** - dynamic wallpaper colors on Android 12+, with a classic seed-color fallback on older devices
 - **AMOLED dark mode** - a pure-black theme for OLED displays, where off pixels save battery
-- **Simulated screen off** - cover the screen with pure black while a search runs, so the display looks off on OLED panels; tap or back to wake it
+- **Simulated screen off** - cover the screen with pure black while a search runs, so the display looks off on OLED panels; hold or double-back to wake it
 - **Daily reminders** - timezone-aware local notification at a time you pick, per day
 - **Keep screen on** - optional wake lock during searches so the device does not sleep mid-run
-- **Settings persisted** - theme, reminders, and search preferences survive restarts
+- **Settings persisted** - theme, streaks, reminders, and search preferences survive restarts
 
 ## Getting started
 
