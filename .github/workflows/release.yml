@@ -47,13 +47,13 @@ jobs:
         working-directory: android
         run: gradle testReleaseUnitTest --no-daemon
 
-      - name: Build Universal & Split-per-ABI Release APKs
-        working-directory: android
-        run: gradle assembleRelease --no-daemon
-
       - name: Build Release App Bundle (AAB)
         working-directory: android
         run: gradle bundleRelease --no-daemon
+
+      - name: Build Universal & Split-per-ABI Release APKs
+        working-directory: android
+        run: gradle assembleRelease --no-daemon
 
       - name: Prepare Release Binaries
         run: |

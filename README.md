@@ -1,120 +1,70 @@
 <div align="center">
 
-<img src="assets/images/play_store_512.png" alt="Microsoft Rewards Automator logo" height="96" />
+<img src="android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Microsoft Rewards Automator logo" height="96" />
 
 # Microsoft Rewards Automator
 
 Automate your daily Bing searches to collect Microsoft Rewards points.
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=flat-square&logo=flutter&logoColor=white)](https://flutter.dev)
-[![Dart](https://img.shields.io/badge/Dart-%3E%3D3.7-0175C2?style=flat-square&logo=dart&logoColor=white)](https://dart.dev)
-[![Platform](https://img.shields.io/badge/Platform-Android%20/%20iOS%20/%20Desktop-blue?style=flat-square)](#)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203%20Expressive-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)](https://developer.android.com/compose)
+[![Platform](https://img.shields.io/badge/Platform-Android%20(API%2024--36)-3DDC84?style=flat-square&logo=android&logoColor=white)](#)
 
-[Features](#features) • [Getting started](#getting-started) • [Usage](#usage) • [Configuration](#configuration) • [Build](#build) • [Project structure](#project-structure) • [Troubleshooting](#troubleshooting)
+[Features](#features) • [Upgrade Compatibility](#upgrade-compatibility) • [Build](#build) • [Project Structure](#project-structure)
 
 </div>
 
-An Android-first Flutter app that signs you into your Microsoft account inside an embedded web view, then runs configurable Bing searches to earn Microsoft Rewards points hands-free.
+A pure Native Android app built with **Kotlin** and **Jetpack Compose (Material 3 Expressive)** that signs you into your Microsoft account inside an embedded `WebView`, then runs configurable Bing searches to earn Microsoft Rewards points hands-free.
 
 > [!WARNING]
 > Automating searches may violate [Microsoft Rewards terms](https://www.microsoft.com/servicesagreement). Use responsibly and at your own risk.
 
 ## Features
 
-- **Automated Bing searches** - configurable count and delay between queries, with live progress and cancel support
-- **Material 3 Expressive UI** - bouncy spatial spring physics, dual shape-morphing buttons & chips, wavy linear progress indicator, and floating pill navigation bar (with automatic reduced-motion accessibility fallback)
-- **Android 16 Live Updates** - promoted ongoing search progress notifications (`ProgressStyle` + status bar chip count) when running in background
-- **Microsoft sign-in** - login through the official Microsoft account flow in an embedded web view, session persisted across restarts
-- **Material You theming** - dynamic wallpaper colors on Android 12+, with a classic seed-color fallback on older devices
-- **AMOLED dark mode** - a pure-black theme for OLED displays, where off pixels save battery
-- **Simulated screen off** - cover the screen with pure black while a search runs, so the display looks off on OLED panels; hold or double-back to wake it
-- **Daily reminders** - timezone-aware local notification at a time you pick, per day
-- **Keep screen on** - optional wake lock during searches so the device does not sleep mid-run
-- **Settings persisted** - theme, streaks, reminders, and search preferences survive restarts
+- **Automated Bing searches** - configurable count (`1..50`), preset count chips (`10, 20, 30, 50`), and randomized delay between queries with live countdown and cancel support
+- **Material 3 Expressive UI** - spatial spring physics (`dampingRatio = 0.6f, stiffness = 500f`), dual shape-morphing buttons & chips (pill $\leftrightarrow$ squircle), animated sinusoidal `WavyLinearProgressIndicator`, and floating pill bottom navigation dock
+- **Android 16 Live Updates (Promoted Ongoing Notifications)** - `POST_PROMOTED_NOTIFICATIONS`, `Notification.ProgressStyle`, status-bar chip `shortCriticalText` (`x/y`), `Stop` action button, and swipe-dismiss guard when running in background
+- **Material You dynamic color** - dynamic wallpaper palette on Android 12+ (`API 31+`) with Microsoft Blue (`#0061B0`) seed fallback
+- **Pure-black AMOLED theme & simulated screen off** - `AMOLED` mode blacks out all surfaces (`#000000`) and optionally covers the display in sticky immersive black during active searches (1.5s hold-to-wake ring or double-back to wake)
+- **Daily streak tracking & haptics** - tracks current and best daily completion streaks with celebratory completion haptics
+- **Data Saver & Keep Screen On** - blocks WebView network images/media for lighter searches and keeps screen awake during active runs
+- **Daily reminders** - `AlarmManager` exact daily notifications surviving device reboots (`BOOT_COMPLETED` / `MY_PACKAGE_REPLACED`)
 
-## Getting started
+## Upgrade Compatibility
 
-### Prerequisites
-
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (stable channel) with Dart `>=3.7.0`
-- A device or emulator (Android recommended for Material You and AMOLED features)
-
-### Run the app
-
-```bash
-# Install dependencies
-flutter pub get
-
-# Run on a connected device or emulator
-flutter run
-```
-
-The app opens to a login screen. Sign in with your Microsoft account in the embedded browser; once it returns to Bing signed in, tap **Continue** and you are taken to the search screen.
-
-## Usage
-
-1. Log in with your Microsoft Rewards account through the embedded sign-in page.
-2. Set the number of searches (1–50) and the delay between searches.
-3. Press **Start Search** — Bing queries open in the embedded web view, with a progress bar and current count.
-4. Press **Cancel** or the back button any time to stop mid-run.
-
-> [!TIP]
-> Use lower count and longer delay values to behave more like a human and reduce point-flagging risk.
-
-## Configuration
-
-All settings live in the **Config** tab (bottom-right of the search screen).
-
-| Setting | Options | Description |
-| --- | --- | --- |
-| Theme | System / Light / Dark / AMOLED | `AMOLED` turns every surface pure black (`#000000`) for OLED screens. `System` follows the device's dark/light preference |
-| Simulate screen off | On/Off | While on, starts a search‑time pure-black overlay that hides the UI — looks like a powered-off display on OLED; tap or press back to wake it for the current run (the toggle stays on, so the next search dims again) |
-| Daily reminder | On/Off + time | Schedules a daily local notification at the chosen time, timezone-aware |
-| Keep screen on | On (default) | Acquires a wake lock while searching so the screen stays awake |
-- **Settings persisted** - theme, reminders, and search preferences survive restarts
-
-Theme and overlay choices are persisted via `SharedPreferences` under `theme_mode` and `amoled_screen_off` keys (defaults: `system` / `false`).
+Upgrading in-place from the previous Flutter release (`v2.0.0` and earlier) works seamlessly without uninstalling:
+- **Identical Package ID & Signing Key**: Uses `applicationId = "com.spin311.microsoft_automatic_rewards"` and the same `upload-keystore.jks` (`alias = "upload"`) certificate.
+- **Preserved Settings & Streaks**: `PreferencesRepository` reads and writes `FlutterSharedPreferences` with `flutter.*` keys and `Long`-encoded integers, preserving existing login state, streaks, theme, and reminder settings automatically.
 
 ## Build
 
 ```bash
-flutter build apk --release     # Android release APK
-flutter build ios               # iOS (requires macOS + Xcode)
+cd android
+./gradlew testReleaseUnitTest   # Run JUnit unit tests
+./gradlew assembleRelease       # Build Universal + ABI-split Release APKs
+./gradlew bundleRelease         # Build Release App Bundle (AAB)
 ```
 
-Icons are generated from `assets/images/auto_search.png` via `flutter_launcher_icons`:
-
-```bash
-dart run flutter_launcher_icons
-```
-
-## Project structure
-
-The codebase follows a feature-first clean-architecture layout (layers per feature: `data`, `domain`, `presentation`):
+## Project Structure
 
 ```
-lib/
-├── main.dart                  # Bootstrap: DI → notifications → Bloc observer → runApp
-├── app.dart                   # MaterialApp, Material You wiring, theme mode
-├── core/
-│   ├── di/                    # GetIt container + search cancellation token
-│   ├── theme/                 # AppTheme (light/dark/AMOLED) + ThemeController
-│   ├── constants/             # App constants, string copy
-│   ├── utils/                 # Error mapping, search helper, validators
-│   └── widgets/               # Reusable CustomButton, CustomTextField, ...
-├── features/
-│   └── search/
-│       ├── data/              # Random query generation
-│       ├── domain/            # SearchRepository contract, impl, PerformSearch use case
-│       └── presentation/      # Bloc (events/states) + pages (login, search, config)
-└── notifications/             # Local notifications + timezone setup
+android/app/src/main/kotlin/com/spin311/microsoft_automatic_rewards/
+├── MainActivity.kt                  # Edge-to-edge Compose host, shortcuts, system bars, notification receiver
+├── data/
+│   ├── PreferencesRepository.kt     # FlutterSharedPreferences-compatible storage + streak calculation
+│   └── WordGenerator.kt             # 5-word random search query generator
+├── notifications/
+│   ├── NotificationHelper.kt        # Android 16 Live Updates (ProgressStyle + chip) & AlarmManager scheduling
+│   └── NotificationReceivers.kt     # DailyReminderReceiver & BootReceiver
+└── ui/
+    ├── SearchViewModel.kt           # StateFlow state, search coroutine loop, validation, haptics
+    ├── components/
+    │   └── ExpressiveComponents.kt  # ExpressiveButton, ExpressiveChoiceChip, WavyLinearProgressIndicator, FloatingNavBar
+    ├── screens/
+    │   ├── AmoledOverlay.kt         # Pure-black hold-to-wake (1.5s) & double-back overlay
+    │   ├── ConfigScreen.kt          # Theme selector, AMOLED toggle, streaks, data saver, reminders
+    │   ├── LoginScreen.kt           # Microsoft account sign-in flow & skip dialog
+    │   └── SearchScreen.kt          # Search controls, preset chips, progress card, persistent Bing WebView
+    └── theme/
+        └── Theme.kt                 # Material 3 Expressive dynamic color + pure-black AMOLED theme
 ```
-
-State management uses `flutter_bloc` (search flow: `SearchInProgress` → `SearchSuccess` / `SearchFailure`, cooperative cancellation via token) and `get_it` for dependency injection.
-
-## Troubleshooting
-
-- **Search does not start** - make sure the search screen's browser shows you signed in to Bing (hint under the form) before pressing Start.
-- **No points awarded after a run** - Bing may batch or delay rewards, or duplicate queries may not count. Increase delay and vary counts.
-- **Login stuck** - log out from the Config tab (clears cookies), then sign in again.
-- **Dynamic colors missing** - Material You only works on Android 12+; older devices fall back to the branded seed color.
