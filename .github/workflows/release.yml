@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - 'feat/native-android'
   workflow_dispatch:
 
 permissions:
@@ -11,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Release
+    name: Build & Release (Native Android)
     runs-on: ubuntu-latest
 
     steps:
@@ -26,20 +28,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@f2c4f6686ca8e8d6e6d0f28410eeef506ed66aff # v2.18.0
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v4.3.1
         with:
-          channel: 'stable'
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Run static analysis
-        run: flutter analyze
-
-      - name: Run unit tests
-        run: flutter test
+          gradle-version: '8.14.3'
 
       - name: Setup Keystore
         env:
@@ -51,27 +43,32 @@ jobs:
             keytool -genkey -v -keystore android/app/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass microsoft -keypass microsoft -dname "CN=Reward Automator, OU=App, O=Org, L=City, S=State, C=US"
           fi
 
-      - name: Build Universal Release APK
-        run: flutter build apk --release
+      - name: Run Unit Tests
+        working-directory: android
+        run: gradle testReleaseUnitTest --no-daemon
 
-      - name: Build Split-per-ABI Release APKs
-        run: flutter build apk --release --split-per-abi
+      - name: Build Universal & Split-per-ABI Release APKs
+        working-directory: android
+        run: gradle assembleRelease --no-daemon
 
       - name: Build Release App Bundle (AAB)
-        run: flutter build appbundle --release
+        working-directory: android
+        run: gradle bundleRelease --no-daemon
 
-      - name: Rename Universal APK
+      - name: Prepare Release Binaries
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/microsoft-rewards-automator-universal.apk
+          cp android/app/build/outputs/apk/release/app-universal-release.apk android/app/build/outputs/apk/release/microsoft-rewards-automator-universal.apk
+          ls -lh android/app/build/outputs/apk/release/
+          ls -lh android/app/build/outputs/bundle/release/
 
       - name: Create Release & Upload Binaries
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: |
-            build/app/outputs/flutter-apk/microsoft-rewards-automator-universal.apk
-            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-            build/app/outputs/flutter-apk/app-x86_64-release.apk
-            build/app/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/apk/release/microsoft-rewards-automator-universal.apk
+            android/app/build/outputs/apk/release/app-arm64-v8a-release.apk
+            android/app/build/outputs/apk/release/app-armeabi-v7a-release.apk
+            android/app/build/outputs/apk/release/app-x86_64-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
           generate_release_notes: true
