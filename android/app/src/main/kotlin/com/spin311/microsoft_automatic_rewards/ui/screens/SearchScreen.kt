@@ -354,8 +354,29 @@ private fun SearchTabContent(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
+        // Embedded Bing WebView Container (Top)
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(top = 4.dp, bottom = 10.dp),
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = {
+                    (persistentWebView.parent as? ViewGroup)?.removeView(persistentWebView)
+                    persistentWebView
+                }
+            )
+        }
+
+        // Search Controls Card (Bottom)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 86.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -522,26 +543,6 @@ private fun SearchTabContent(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Embedded Bing WebView Container
-        Card(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(bottom = 86.dp),
-            shape = RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            AndroidView(
-                modifier = Modifier.fillMaxSize(),
-                factory = {
-                    (persistentWebView.parent as? ViewGroup)?.removeView(persistentWebView)
-                    persistentWebView
-                }
-            )
         }
     }
 }
