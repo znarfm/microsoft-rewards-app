@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -55,12 +56,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -70,13 +73,11 @@ import com.spin311.microsoft_automatic_rewards.ui.AppUiState
 import com.spin311.microsoft_automatic_rewards.ui.SearchState
 import com.spin311.microsoft_automatic_rewards.ui.SearchViewModel
 import com.spin311.microsoft_automatic_rewards.ui.components.ExpressiveButton
-import com.spin311.microsoft_automatic_rewards.ui.components.ExpressiveChoiceChip
 import com.spin311.microsoft_automatic_rewards.ui.components.ExpressiveFloatingNavBar
 import com.spin311.microsoft_automatic_rewards.ui.components.ExpressiveIconButton
 import com.spin311.microsoft_automatic_rewards.ui.components.NavTabItem
 import com.spin311.microsoft_automatic_rewards.ui.components.WavyLinearProgressIndicator
 import com.spin311.microsoft_automatic_rewards.ui.theme.AppThemeMode
-import com.spin311.microsoft_automatic_rewards.data.PreferencesRepository
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,6 +90,8 @@ fun SearchScreen(
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    var canGoBackInWebView by remember { mutableStateOf(false) }
+    var backProgress by remember { mutableFloatStateOf(0f) }
 
     // Persistent WebView kept alive across tab switches
     val persistentWebView = remember {
@@ -107,7 +110,13 @@ fun SearchScreen(
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
+                    canGoBackInWebView = view?.canGoBack() == true
                     CookieManager.getInstance().flush()
+                }
+
+                override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+                    super.doUpdateVisitedHistory(view, url, isReload)
+                    canGoBackInWebView = view?.canGoBack() == true
                 }
             }
             loadUrl("https://www.bing.com")
@@ -189,6 +198,26 @@ fun SearchScreen(
         uiState.amoledOverlay &&
         !uiState.overlayDismissed
 
+    PredictiveBackHandler(
+        enabled = !showAmoledOverlay && (uiState.selectedTab == 1 || (uiState.selectedTab == 0 && canGoBackInWebView))
+    ) { progress ->
+        try {
+            progress.collect { backEvent ->
+                backProgress = backEvent.progress
+            }
+            val wasTab1 = uiState.selectedTab == 1
+            backProgress = 0f
+            if (wasTab1) {
+                viewModel.selectTab(0)
+            } else if (persistentWebView.canGoBack()) {
+                persistentWebView.goBack()
+                canGoBackInWebView = persistentWebView.canGoBack()
+            }
+        } catch (_: kotlinx.coroutines.CancellationException) {
+            backProgress = 0f
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             snackbarHost = {
@@ -235,14 +264,25 @@ fun SearchScreen(
                     SearchTabContent(
                         uiState = uiState,
                         viewModel = viewModel,
-                        persistentWebView = persistentWebView
+                        persistentWebView = persistentWebView,
+                        backProgress = backProgress
                     )
                 } else {
-                    ConfigScreen(
-                        uiState = uiState,
-                        viewModel = viewModel,
-                        onExitApp = onExitApp
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                scaleX = 1f - (backProgress * 0.06f)
+                                scaleY = 1f - (backProgress * 0.06f)
+                                alpha = 1f - (backProgress * 0.25f)
+                            }
+                    ) {
+                        ConfigScreen(
+                            uiState = uiState,
+                            viewModel = viewModel,
+                            onExitApp = onExitApp
+                        )
+                    }
                 }
 
                 // Floating Pill Navigation Bar at bottom center
@@ -344,7 +384,8 @@ private fun StreakBadge(
 private fun SearchTabContent(
     uiState: AppUiState,
     viewModel: SearchViewModel,
-    persistentWebView: WebView
+    persistentWebView: WebView,
+    backProgress: Float = 0f
 ) {
     val isSearching = uiState.searchState is SearchState.InProgress
 
@@ -358,7 +399,14 @@ private fun SearchTabContent(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(top = 4.dp, bottom = 10.dp),
+                .padding(top = 4.dp, bottom = 10.dp)
+                .graphicsLayer {
+                    if (backProgress > 0f) {
+                        scaleX = 1f - (backProgress * 0.06f)
+                        scaleY = 1f - (backProgress * 0.06f)
+                        alpha = 1f - (backProgress * 0.25f)
+                    }
+                },
             shape = RoundedCornerShape(24.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
@@ -387,23 +435,6 @@ private fun SearchTabContent(
                     .padding(14.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Preset Count Chips (10, 20, 30, 50)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val currentCount = uiState.searchCountText.trim().toIntOrNull()
-                    PreferencesRepository.PRESET_SEARCH_COUNTS.forEach { preset ->
-                        ExpressiveChoiceChip(
-                            label = "$preset",
-                            selected = currentCount == preset,
-                            enabled = !isSearching,
-                            onClick = { viewModel.updateSearchCount(preset.toString()) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
                 // Search Count & Delay inputs
                 Row(
                     modifier = Modifier.fillMaxWidth(),

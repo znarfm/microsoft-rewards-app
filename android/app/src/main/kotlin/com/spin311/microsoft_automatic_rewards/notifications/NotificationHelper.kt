@@ -1,6 +1,5 @@
 package com.spin311.microsoft_automatic_rewards.notifications
 
-import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,9 +8,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.spin311.microsoft_automatic_rewards.MainActivity
 import com.spin311.microsoft_automatic_rewards.R
-import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 object NotificationHelper {
     const val STOP_SEARCH_ACTION = "com.spin311.microsoft_automatic_rewards.STOP_SEARCH"
@@ -24,7 +26,6 @@ object NotificationHelper {
     const val DAILY_REMINDER_NOTIFICATION_ID = 0
     const val SEARCH_STATUS_NOTIFICATION_ID = 1
     const val PROGRESS_NOTIFICATION_ID = 2
-    private const val DAILY_REMINDER_REQUEST_CODE = 100
 
     @Volatile
     var dismissedByUser: Boolean = false
@@ -63,20 +64,14 @@ object NotificationHelper {
         manager.createNotificationChannel(progressChannel)
     }
 
-    fun showPromotedSearchProgress(
+    fun buildPromotedSearchProgressNotification(
         context: Context,
         current: Int,
         total: Int,
         remainingSeconds: Int,
         precomputedPercent: Int? = null
-    ) {
-        if (current <= 1 && remainingSeconds == 0) {
-            dismissedByUser = false
-        }
-        if (dismissedByUser) return
-
+    ): Notification {
         ensureChannels(context)
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val percent = precomputedPercent ?: if (total > 0) ((current.toDouble() / total.toDouble()) * 100).toInt() else 0
         val bodyText = if (remainingSeconds > 0) {
@@ -155,9 +150,36 @@ object NotificationHelper {
             applyAndroid16LiveUpdateFeatures(builder, chipText, percent)
         }
 
+        return builder.build()
+    }
+
+    fun showPromotedSearchProgress(
+        context: Context,
+        current: Int,
+        total: Int,
+        remainingSeconds: Int,
+        precomputedPercent: Int? = null
+    ) {
+        if (current <= 1 && remainingSeconds == 0) {
+            dismissedByUser = false
+        }
+        if (dismissedByUser) return
+
         try {
-            manager.notify(PROGRESS_NOTIFICATION_ID, builder.build())
-        } catch (_: SecurityException) {
+            SearchForegroundService.startOrUpdate(context, current, total, remainingSeconds, precomputedPercent)
+        } catch (_: Throwable) {
+            try {
+                val notification = buildPromotedSearchProgressNotification(
+                    context,
+                    current,
+                    total,
+                    remainingSeconds,
+                    precomputedPercent
+                )
+                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                manager?.notify(PROGRESS_NOTIFICATION_ID, notification)
+            } catch (_: Throwable) {
+            }
         }
     }
 
@@ -203,6 +225,10 @@ object NotificationHelper {
 
     fun cancelPromotedSearchProgress(context: Context) {
         dismissedByUser = false
+        try {
+            SearchForegroundService.stop(context)
+        } catch (_: Throwable) {
+        }
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
         manager.cancel(PROGRESS_NOTIFICATION_ID)
     }
@@ -251,62 +277,18 @@ object NotificationHelper {
     }
 
     fun scheduleDailyReminder(context: Context, hour: Int, minute: Int) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, DailyReminderReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            DAILY_REMINDER_REQUEST_CODE,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        val delayMs = DailyReminderWorker.computeInitialDelayMillis(hour, minute)
+        val request = OneTimeWorkRequestBuilder<DailyReminderWorker>()
+            .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
+            .build()
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            DailyReminderWorker.WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            request
         )
-
-        val target = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-            if (timeInMillis <= System.currentTimeMillis()) {
-                add(Calendar.DAY_OF_YEAR, 1)
-            }
-        }
-
-        try {
-            val canExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                alarmManager.canScheduleExactAlarms()
-            } else {
-                true
-            }
-            if (canExact) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    target.timeInMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    target.timeInMillis,
-                    pendingIntent
-                )
-            }
-        } catch (_: SecurityException) {
-            alarmManager.setAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                target.timeInMillis,
-                pendingIntent
-            )
-        }
     }
 
     fun cancelDailyReminder(context: Context) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, DailyReminderReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            DAILY_REMINDER_REQUEST_CODE,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        alarmManager.cancel(pendingIntent)
+        WorkManager.getInstance(context).cancelUniqueWork(DailyReminderWorker.WORK_NAME)
     }
 }
