@@ -16,11 +16,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -80,7 +84,7 @@ import com.spin311.microsoft_automatic_rewards.ui.components.WavyLinearProgressI
 import com.spin311.microsoft_automatic_rewards.ui.theme.AppThemeMode
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun SearchScreen(
@@ -90,6 +94,7 @@ fun SearchScreen(
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val isImeVisible = WindowInsets.isImeVisible
     var canGoBackInWebView by remember { mutableStateOf(false) }
     var backProgress by remember { mutableFloatStateOf(0f) }
 
@@ -285,27 +290,33 @@ fun SearchScreen(
                     }
                 }
 
-                // Floating Pill Navigation Bar at bottom center
-                ExpressiveFloatingNavBar(
-                    items = listOf(
-                        NavTabItem(
-                            label = "Search",
-                            selectedIcon = Icons.Rounded.Search,
-                            unselectedIcon = Icons.Outlined.Search
-                        ),
-                        NavTabItem(
-                            label = "Config",
-                            selectedIcon = Icons.Rounded.Settings,
-                            unselectedIcon = Icons.Outlined.Settings
-                        )
-                    ),
-                    selectedIndex = uiState.selectedTab,
-                    onSelect = { viewModel.selectTab(it) },
+                // Floating Pill Navigation Bar at bottom center (hidden when keyboard is open)
+                AnimatedVisibility(
+                    visible = !isImeVisible,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
                         .padding(bottom = 12.dp)
-                )
+                ) {
+                    ExpressiveFloatingNavBar(
+                        items = listOf(
+                            NavTabItem(
+                                label = "Search",
+                                selectedIcon = Icons.Rounded.Search,
+                                unselectedIcon = Icons.Outlined.Search
+                            ),
+                            NavTabItem(
+                                label = "Config",
+                                selectedIcon = Icons.Rounded.Settings,
+                                unselectedIcon = Icons.Outlined.Settings
+                            )
+                        ),
+                        selectedIndex = uiState.selectedTab,
+                        onSelect = { viewModel.selectTab(it) }
+                    )
+                }
             }
         }
 
@@ -380,6 +391,7 @@ private fun StreakBadge(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SearchTabContent(
     uiState: AppUiState,
@@ -388,10 +400,13 @@ private fun SearchTabContent(
     backProgress: Float = 0f
 ) {
     val isSearching = uiState.searchState is SearchState.InProgress
+    val isImeVisible = WindowInsets.isImeVisible
+    val bottomCardPadding = if (isImeVisible) 10.dp else 86.dp
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
             .padding(horizontal = 16.dp)
     ) {
         // Embedded Bing WebView Container (Top)
@@ -423,7 +438,7 @@ private fun SearchTabContent(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 86.dp),
+                .padding(bottom = bottomCardPadding),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow
