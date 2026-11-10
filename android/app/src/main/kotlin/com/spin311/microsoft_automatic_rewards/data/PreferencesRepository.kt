@@ -183,8 +183,6 @@ class PreferencesRepository(context: Context) {
         const val DEFAULT_DATA_SAVER = true
         const val DEFAULT_HAPTIC_FEEDBACK = true
 
-        val PRESET_SEARCH_COUNTS = listOf(10, 20, 30, 50)
-
         fun formatDate(year: Int, monthOneBased: Int, day: Int): String {
             return "%04d-%02d-%02d".format(year, monthOneBased, day)
         }

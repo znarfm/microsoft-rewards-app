@@ -126,8 +126,74 @@ class RewardsUnitTest {
     }
 
     @Test
-    fun `PRESET_SEARCH_COUNTS contains valid standard preset values`() {
-        assertEquals(listOf(10, 20, 30, 50), PreferencesRepository.PRESET_SEARCH_COUNTS)
+    fun `DailyReminderWorker shouldSendReminder verifies smart reminder conditions`() {
+        // Disabled reminder never sends
+        org.junit.Assert.assertFalse(
+            com.spin311.microsoft_automatic_rewards.notifications.DailyReminderWorker.shouldSendReminder(
+                sendDailyReminder = false,
+                isCompletedToday = false
+            )
+        )
+        org.junit.Assert.assertFalse(
+            com.spin311.microsoft_automatic_rewards.notifications.DailyReminderWorker.shouldSendReminder(
+                sendDailyReminder = false,
+                isCompletedToday = true
+            )
+        )
+        // Enabled reminder skips if already completed today
+        org.junit.Assert.assertFalse(
+            com.spin311.microsoft_automatic_rewards.notifications.DailyReminderWorker.shouldSendReminder(
+                sendDailyReminder = true,
+                isCompletedToday = true
+            )
+        )
+        // Enabled reminder sends if not completed today
+        assertTrue(
+            com.spin311.microsoft_automatic_rewards.notifications.DailyReminderWorker.shouldSendReminder(
+                sendDailyReminder = true,
+                isCompletedToday = false
+            )
+        )
+    }
+
+    @Test
+    fun `DailyReminderWorker computeInitialDelayMillis handles later today and next day rollover`() {
+        val baseCalendar = java.util.Calendar.getInstance().apply {
+            set(2026, java.util.Calendar.APRIL, 10, 10, 0, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+
+        // Target 14:30 same day -> exactly 4.5 hours = 16,200,000 ms
+        val delaySameDay = com.spin311.microsoft_automatic_rewards.notifications.DailyReminderWorker.computeInitialDelayMillis(
+            hour = 14,
+            minute = 30,
+            now = baseCalendar
+        )
+        assertEquals(16_200_000L, delaySameDay)
+
+        // Target 08:15 next day -> 22 hours + 15 min = 80,100,000 ms
+        val delayNextDay = com.spin311.microsoft_automatic_rewards.notifications.DailyReminderWorker.computeInitialDelayMillis(
+            hour = 8,
+            minute = 15,
+            now = baseCalendar
+        )
+        assertEquals(80_100_000L, delayNextDay)
+    }
+
+    @Test
+    fun `SearchForegroundService and DailyReminderWorker constants match expectations`() {
+        assertEquals(
+            "com.spin311.microsoft_automatic_rewards.FGS_START_OR_UPDATE",
+            com.spin311.microsoft_automatic_rewards.notifications.SearchForegroundService.ACTION_START_OR_UPDATE
+        )
+        assertEquals(
+            "com.spin311.microsoft_automatic_rewards.FGS_STOP",
+            com.spin311.microsoft_automatic_rewards.notifications.SearchForegroundService.ACTION_STOP
+        )
+        assertEquals(
+            "daily_rewards_reminder",
+            com.spin311.microsoft_automatic_rewards.notifications.DailyReminderWorker.WORK_NAME
+        )
     }
 
     @Test

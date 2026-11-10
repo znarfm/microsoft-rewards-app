@@ -238,7 +238,9 @@ class SearchViewModel(
     fun onAppForegroundChanged(inForeground: Boolean) {
         isInForeground = inForeground
         if (inForeground) {
-            NotificationHelper.cancelPromotedSearchProgress(appContext)
+            if (_uiState.value.searchState !is SearchState.InProgress) {
+                NotificationHelper.cancelPromotedSearchProgress(appContext)
+            }
             if (prefs.searchCancelledFromNotification) {
                 prefs.searchCancelledFromNotification = false
                 if (_uiState.value.searchState is SearchState.InProgress) {
@@ -290,6 +292,12 @@ class SearchViewModel(
                 searchState = SearchState.InProgress(current = 0, total = count, remainingSeconds = 0)
             )
         }
+        NotificationHelper.showPromotedSearchProgress(
+            context = appContext,
+            current = 0,
+            total = count,
+            remainingSeconds = 0
+        )
 
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
@@ -306,14 +314,12 @@ class SearchViewModel(
                             )
                         )
                     }
-                    if (!isInForeground) {
-                        NotificationHelper.showPromotedSearchProgress(
-                            context = appContext,
-                            current = i,
-                            total = count,
-                            remainingSeconds = 0
-                        )
-                    }
+                    NotificationHelper.showPromotedSearchProgress(
+                        context = appContext,
+                        current = i,
+                        total = count,
+                        remainingSeconds = 0
+                    )
 
                     val query = WordGenerator.randomSentence(5)
                     val encodedQuery = Uri.encode(query)
@@ -335,14 +341,12 @@ class SearchViewModel(
                                 )
                             )
                         }
-                        if (!isInForeground) {
-                            NotificationHelper.showPromotedSearchProgress(
-                                context = appContext,
-                                current = i + 1,
-                                total = count,
-                                remainingSeconds = remSec
-                            )
-                        }
+                        NotificationHelper.showPromotedSearchProgress(
+                            context = appContext,
+                            current = i + 1,
+                            total = count,
+                            remainingSeconds = remSec
+                        )
                         val stepMs = remainingMs.coerceAtMost(1000L).coerceAtLeast(100L)
                         delay(stepMs)
                         remainingMs -= stepMs
