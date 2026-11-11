@@ -3,6 +3,9 @@ package com.spin311.microsoft_automatic_rewards.ui.screens
 import android.annotation.SuppressLint
 import android.view.ViewGroup
 import android.webkit.CookieManager
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.PredictiveBackHandler
@@ -100,6 +103,9 @@ fun SearchScreen(
 
     // Persistent WebView kept alive across tab switches
     val persistentWebView = remember {
+        var mainFrameFailed = false
+        var mainFrameErrorDesc: String? = null
+
         WebView(context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -117,6 +123,43 @@ fun SearchScreen(
                     super.onPageFinished(view, url)
                     canGoBackInWebView = view?.canGoBack() == true
                     CookieManager.getInstance().flush()
+
+                    if (mainFrameFailed) {
+                        viewModel.onPageResult(url, success = false, error = mainFrameErrorDesc)
+                    } else {
+                        viewModel.onPageResult(url, success = true, error = null)
+                    }
+                    // Reset flags for subsequent loads
+                    mainFrameFailed = false
+                    mainFrameErrorDesc = null
+                }
+
+                override fun onReceivedError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    error: WebResourceError?
+                ) {
+                    super.onReceivedError(view, request, error)
+                    if (request?.isForMainFrame == true) {
+                        mainFrameFailed = true
+                        val desc = error?.description?.toString() ?: "Network error"
+                        mainFrameErrorDesc = desc
+                    }
+                }
+
+                override fun onReceivedHttpError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    errorResponse: WebResourceResponse?
+                ) {
+                    super.onReceivedHttpError(view, request, errorResponse)
+                    if (request?.isForMainFrame == true) {
+                        val statusCode = errorResponse?.statusCode ?: 200
+                        if (statusCode >= 400) {
+                            mainFrameFailed = true
+                            mainFrameErrorDesc = "HTTP error $statusCode"
+                        }
+                    }
                 }
 
                 override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {

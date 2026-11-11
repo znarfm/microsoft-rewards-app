@@ -80,11 +80,61 @@ class RewardsUnitTest {
     }
 
     @Test
-    fun `WordGenerator generates 5-word search query`() {
+    fun `WordGenerator generates non-empty realistic search query`() {
         val query = WordGenerator.randomSentence(5)
-        val words = query.split(" ").filter { it.isNotBlank() }
-        assertEquals(5, words.size)
         assertTrue(query.isNotBlank())
+        assertEquals(query.trim(), query)
+        assertTrue(!query.contains("  "))
+        assertEquals(query.lowercase(), query)
+        val words = query.split(" ")
+        assertTrue(words.size in 2..7)
+    }
+
+    @Test
+    fun `WordGenerator returns empty string for non-positive wordCount`() {
+        assertEquals("", WordGenerator.randomSentence(0))
+        assertEquals("", WordGenerator.randomSentence(-1))
+    }
+
+    @Test
+    fun `WordGenerator achieves high uniqueness across 100 generations`() {
+        val seed = 42L
+        val rng = kotlin.random.Random(seed)
+        val queries = (1..100).map { WordGenerator.randomSentence(5, rng) }
+        val uniqueQueries = queries.toSet()
+
+        queries.forEach { query ->
+            assertTrue(query.isNotBlank())
+            assertEquals(query.trim(), query)
+            assertTrue(!query.contains("  "))
+        }
+
+        assertTrue("Expected at least 85 unique queries out of 100, got ${uniqueQueries.size}", uniqueQueries.size >= 85)
+    }
+
+    @Test
+    fun `WordGenerator distinctQueries returns count unique queries`() {
+        val queries = WordGenerator.distinctQueries(60, kotlin.random.Random(7))
+        assertEquals(60, queries.size)
+        assertEquals(60, queries.toSet().size)
+    }
+
+    @Test
+    fun `hasBingAuthCookie detects non-empty _U cookie only`() {
+        assertTrue(SearchViewModel.hasBingAuthCookie("MUID=abc; _U=token123; SRCHD=AF"))
+        assertTrue(!SearchViewModel.hasBingAuthCookie("MUID=abc; _U=; SRCHD=AF"))
+        assertTrue(!SearchViewModel.hasBingAuthCookie("MUID=abc; X_U=token"))
+        assertTrue(!SearchViewModel.hasBingAuthCookie(null))
+        assertTrue(!SearchViewModel.hasBingAuthCookie(""))
+    }
+
+    @Test
+    fun `computeWaitMs jitters symmetrically within 30 percent and floors at 1s`() {
+        val rng = kotlin.random.Random(1)
+        val waits = (1..500).map { SearchViewModel.computeWaitMs(15.0, rng) }
+        assertTrue(waits.all { it in 10_500L..19_500L })
+        assertTrue(waits.any { it < 15_000L } && waits.any { it > 15_000L })
+        assertTrue((1..100).all { SearchViewModel.computeWaitMs(0.0, rng) >= 1_000L })
     }
 
     @Test

@@ -52,7 +52,7 @@ android/app/src/main/kotlin/com/spin311/microsoft_automatic_rewards/
 ├── MainActivity.kt                  # Edge-to-edge Compose host, shortcuts, system bars, notification receiver
 ├── data/
 │   ├── PreferencesRepository.kt     # FlutterSharedPreferences-compatible storage + streak calculation
-│   └── WordGenerator.kt             # 5-word random search query generator
+│   └── WordGenerator.kt             # Template-based natural search queries (distinct per run)
 ├── notifications/
 │   ├── NotificationHelper.kt        # Android 16 Live Updates (ProgressStyle + chip) & AlarmManager scheduling
 │   └── NotificationReceivers.kt     # DailyReminderReceiver & BootReceiver

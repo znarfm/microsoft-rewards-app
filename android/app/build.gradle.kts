@@ -12,8 +12,8 @@ android {
         applicationId = "com.spin311.microsoft_automatic_rewards"
         minSdk = 24
         targetSdk = 36
-        versionCode = 25
-        versionName = "2.3.0"
+        versionCode = 26
+        versionName = "2.3.1"
     }
 
     compileOptions {
