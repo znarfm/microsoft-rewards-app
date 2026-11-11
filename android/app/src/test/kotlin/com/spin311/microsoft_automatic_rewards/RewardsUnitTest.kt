@@ -261,4 +261,28 @@ class RewardsUnitTest {
         assertEquals(AppThemeMode.AMOLED, AppThemeMode.fromStorageKey("amoled"))
         assertEquals(AppThemeMode.SYSTEM, AppThemeMode.fromStorageKey(null))
     }
+
+    @Test
+    fun `buildSearchUrl includes form=QBLH, qs=n, and sp=-1 params`() {
+        val url = SearchViewModel.buildSearchUrl("test%20query")
+        assertEquals(
+            "https://www.bing.com/search?q=test%20query&qs=n&form=QBLH&sp=-1&pq=",
+            url
+        )
+        assertTrue(url.contains("form=QBLH"))
+        assertTrue(url.contains("qs=n"))
+        assertTrue(url.contains("sp=-1"))
+    }
+
+    @Test
+    fun `sanitizeUserAgent strips wv token and Version prefix`() {
+        val webViewUa = "Mozilla/5.0 (Linux; Android 14; Pixel 7 Build/UQ1A) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.230 Mobile Safari/537.36; wv"
+        val cleaned = SearchViewModel.sanitizeUserAgent(webViewUa)
+        assertEquals(
+            "Mozilla/5.0 (Linux; Android 14; Pixel 7 Build/UQ1A) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36",
+            cleaned
+        )
+        assertTrue(!cleaned.contains("; wv"))
+        assertTrue(!cleaned.contains("Version/4.0"))
+    }
 }

@@ -15,7 +15,7 @@ Ship simplest, minimal working solution. YAGNI.
 
 # Repository Guidelines
 ## Project Overview
-Native Android app (Kotlin + Jetpack Compose M3 Expressive), `applicationId = com.spin311.microsoft_automatic_rewards`, v2.3.0 (code 25). Sign in to Microsoft in embedded `WebView`, run configurable Bing searches (count + delay) to earn Rewards points. Extras: streaks, daily reminder, keep-screen-on, AMOLED overlay, data saver, haptics, Android 16 Live Update progress. Upgraded in-place from old Flutter app — keep compat (see Persistence).
+Native Android app (Kotlin + Jetpack Compose M3 Expressive), `applicationId = com.spin311.microsoft_automatic_rewards`, v2.3.2 (code 27). Sign in to Microsoft in embedded `WebView`, run configurable Bing searches (count + delay) to earn Rewards points. Extras: streaks, daily reminder, keep-screen-on, AMOLED overlay, data saver, haptics, Android 16 Live Update progress. Upgraded in-place from old Flutter app — keep compat (see Persistence).
 
 ## Architecture & Data Flow
 Code root: `android/app/src/main/kotlin/com/spin311/microsoft_automatic_rewards/`. Single Activity, single ViewModel, no DI framework.
