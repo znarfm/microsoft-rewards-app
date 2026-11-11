@@ -339,7 +339,7 @@ fun ConfigScreen(
             ConfigSwitchRow(
                 icon = Icons.Rounded.DataSaverOn,
                 title = "Data Saver Mode",
-                subtitle = "Blocks WebView images & media for faster, lighter searches",
+                subtitle = "Blocks WebView images & media for faster searches (turn off if points fail to credit)",
                 checked = uiState.dataSaver,
                 onCheckedChange = { viewModel.setDataSaver(it) }
             )

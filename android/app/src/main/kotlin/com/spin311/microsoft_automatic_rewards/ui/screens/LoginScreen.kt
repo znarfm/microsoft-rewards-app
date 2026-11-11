@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.spin311.microsoft_automatic_rewards.ui.SearchViewModel
 import com.spin311.microsoft_automatic_rewards.ui.components.ExpressiveButton
 import com.spin311.microsoft_automatic_rewards.ui.components.ExpressiveIconButton
 import com.spin311.microsoft_automatic_rewards.ui.components.WavyLinearProgressIndicator
@@ -268,6 +269,7 @@ fun LoginScreen(
                                 )
                                 CookieManager.getInstance().setAcceptCookie(true)
                                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                                settings.userAgentString = SearchViewModel.sanitizeUserAgent(settings.userAgentString)
                                 settings.javaScriptEnabled = true
                                 settings.domStorageEnabled = true
                                 settings.databaseEnabled = true

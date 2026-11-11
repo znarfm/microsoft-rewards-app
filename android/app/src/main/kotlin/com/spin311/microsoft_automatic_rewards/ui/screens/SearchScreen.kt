@@ -113,6 +113,7 @@ fun SearchScreen(
             )
             CookieManager.getInstance().setAcceptCookie(true)
             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+            settings.userAgentString = SearchViewModel.sanitizeUserAgent(settings.userAgentString)
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.databaseEnabled = true
@@ -177,7 +178,7 @@ fun SearchScreen(
 
     LaunchedEffect(viewModel) {
         viewModel.webViewUrlCommands.collect { url ->
-            persistentWebView.loadUrl(url)
+            persistentWebView.loadUrl(url, mapOf("Referer" to "https://www.bing.com/"))
         }
     }
 

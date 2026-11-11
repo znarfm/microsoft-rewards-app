@@ -350,7 +350,7 @@ class SearchViewModel(
 
                     val query = queries.getOrElse(i) { WordGenerator.randomSentence() }
                     val encodedQuery = Uri.encode(query)
-                    val searchUrl = "https://www.bing.com/search?q=$encodedQuery"
+                    val searchUrl = buildSearchUrl(encodedQuery)
 
                     // Execute page load with 1 retry policy on failure
                     var attempt = 0
@@ -515,6 +515,13 @@ class SearchViewModel(
             val jitterMs = random.nextLong(-maxJitterMs, maxJitterMs + 1L)
             return (baseMs + jitterMs).coerceAtLeast(1000L)
         }
+
+        fun buildSearchUrl(encodedQuery: String): String =
+            "https://www.bing.com/search?q=$encodedQuery&qs=n&form=QBLH&sp=-1&pq="
+
+        fun sanitizeUserAgent(ua: String): String =
+            ua.replace("; wv", "")
+                .replace(Regex("""Version/\d+\.\d+\s*"""), "")
     }
 }
 
