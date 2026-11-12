@@ -15,10 +15,10 @@ Ship simplest, minimal working solution. YAGNI.
 
 # Repository Guidelines
 ## Project Overview
-Native Android app (Kotlin + Jetpack Compose M3 Expressive), `applicationId = com.spin311.microsoft_automatic_rewards`, v2.3.2 (code 27). Sign in to Microsoft in embedded `WebView`, run configurable Bing searches (count + delay) to earn Rewards points. Extras: streaks, daily reminder, keep-screen-on, AMOLED overlay, data saver, haptics, Android 16 Live Update progress. Upgraded in-place from old Flutter app — keep compat (see Persistence).
+Native Android app (Kotlin + Jetpack Compose M3 Expressive), display name `Bing Rewards Automator`, `applicationId = com.znarfm.bing`, namespace `com.znarfm.bing`, v2.4.0 (code 28). Sign in to Microsoft in embedded `WebView`, run configurable Bing searches (count + delay) to earn Rewards points. Extras: streaks, daily reminder, keep-screen-on, AMOLED overlay, data saver, haptics, Android 16 Live Update progress, vector adaptive & Material You monochrome launcher icons, in-app GitHub Releases self-updater. Upgraded in-place from old Flutter app — keep compat (see Persistence).
 
 ## Architecture & Data Flow
-Code root: `android/app/src/main/kotlin/com/spin311/microsoft_automatic_rewards/`. Single Activity, single ViewModel, no DI framework.
+Code root: `android/app/src/main/kotlin/com/znarfm/bing/`. Single Activity, single ViewModel, no DI framework.
 - `MainActivity` — Compose host; `LoginScreen` if `!isLoggedIn` else `SearchScreen`. Handles start-search shortcut, keep-screen-on flag, immersive AMOLED, `onStart/onStop` → `viewModel.onAppForegroundChanged`. Manifest `configChanges` keeps Activity (and WebView) alive across rotation/uiMode.
 - `ui/screens/LoginScreen` — MS login WebView; user taps **Continue** → `setLoggedIn(true)` (no auto URL detection: MS redirects flicker).
 - `ui/screens/SearchScreen` — controls, progress card, persistent Bing `WebView` (`remember`). Collects `viewModel.webViewUrlCommands` → `loadUrl`. `WebViewClient` reports main-frame result via `viewModel.onPageResult(url, success, error)` (`onReceivedError`, `onReceivedHttpError >= 400`, `onPageFinished`).
@@ -32,7 +32,9 @@ Code root: `android/app/src/main/kotlin/com/spin311/microsoft_automatic_rewards/
 - `data/WordGenerator` — template-based natural queries (`randomSentence`, `distinctQueries`). No brands/people/NSFW.
 - `data/PreferencesRepository` — all prefs + pure streak math (`computeStreakAfterCompletion`).
 - `notifications/` — `NotificationHelper` (progress Live Update, daily reminder scheduling), `SearchForegroundService` (dataSync FGS + partial wakelock during run), `NotificationReceivers.kt` (`DailyReminderWorker` WorkManager smart reminder, receivers).
-- `ui/components/ExpressiveComponents`, `ui/theme/Theme` (`AppThemeMode` system/light/dark/amoled, dynamic color, seed `#0061B0`), `utils/` (`InputValidators`, `HapticsHelper`).
+- `ui/components/ExpressiveComponents`, `ui/theme/Theme` (`AppThemeMode` system/light/dark/amoled, dynamic color, seed `#0061B0`), `utils/` (`InputValidators`, `HapticsHelper`, `UpdateChecker`).
+- Icons: Vector adaptive (`drawable/ic_launcher_foreground.xml`, `ic_launcher_background.xml`), Material You monochrome (`drawable/ic_launcher_monochrome.xml`), and round icon support.
+- Self-updater: `utils/UpdateChecker.kt` checks GitHub Releases (auto on launch, manual in ConfigScreen), downloads ABI-matched APK, launches install via `FileProvider`.
 
 ## Persistence
 `SharedPreferences` file `FlutterSharedPreferences`, keys `flutter.*`, ints Long-encoded — ⚠️ never rename (upgrade compat, asserted in tests). Defaults: count `"22"`, delay `"15"`, daily reminder off @19:00, keep screen on, login popup on, AMOLED overlay off, data saver on, haptics on, theme `system`.

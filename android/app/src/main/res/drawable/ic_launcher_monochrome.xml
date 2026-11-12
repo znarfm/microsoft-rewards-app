@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Monochrome silhouette: Stylized Bing 'b' ribbon + 4-point Reward Sparkle Star -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M34,26L46,31V63.5L63.5,53.5L54.5,48.5L49,38L75,51.5V65.5L46,82L34,75.5Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M67,23L70.2,31.8L79,35L70.2,38.2L67,47L63.8,38.2L55,35L63.8,31.8Z" />
+</vector>
