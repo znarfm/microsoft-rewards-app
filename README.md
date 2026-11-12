@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Microsoft Rewards Automator logo" height="96" />
+<img src="android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Bing Rewards Automator logo" height="96" />
 
-# Microsoft Rewards Automator
+# Bing Rewards Automator
 
 Automate your daily Bing searches to collect Microsoft Rewards points.
 
@@ -23,17 +23,19 @@ A pure Native Android app built with **Kotlin** and **Jetpack Compose (Material 
 
 - **Automated Bing searches** - configurable count (`1..50`), preset count chips (`10, 20, 30, 50`), and randomized delay between queries with live countdown and cancel support
 - **Material 3 Expressive UI** - spatial spring physics (`dampingRatio = 0.6f, stiffness = 500f`), dual shape-morphing buttons & chips (pill $\leftrightarrow$ squircle), animated sinusoidal `WavyLinearProgressIndicator`, and floating pill bottom navigation dock
+- **Vector Adaptive & Material You Monochrome Icon** - vector adaptive launcher icon (`drawable/ic_launcher_foreground.xml`, `ic_launcher_background.xml`, `roundIcon`) with themed Material You monochrome dynamic tinting on Android 13+ (`drawable/ic_launcher_monochrome.xml`)
+- **In-App Self-Updater** - checks GitHub Releases for new updates (`utils/UpdateChecker.kt`), auto-checks on launch with manual check option in ConfigScreen, ABI-aware APK download, and seamless install via `FileProvider`
 - **Android 16 Live Updates (Promoted Ongoing Notifications)** - `POST_PROMOTED_NOTIFICATIONS`, `Notification.ProgressStyle`, status-bar chip `shortCriticalText` (`x/y`), `Stop` action button, and swipe-dismiss guard when running in background
 - **Material You dynamic color** - dynamic wallpaper palette on Android 12+ (`API 31+`) with Microsoft Blue (`#0061B0`) seed fallback
 - **Pure-black AMOLED theme & simulated screen off** - `AMOLED` mode blacks out all surfaces (`#000000`) and optionally covers the display in sticky immersive black during active searches (1.5s hold-to-wake ring or double-back to wake)
 - **Daily streak tracking & haptics** - tracks current and best daily completion streaks with celebratory completion haptics
 - **Data Saver & Keep Screen On** - blocks WebView network images/media for lighter searches and keeps screen awake during active runs
-- **Daily reminders** - `AlarmManager` exact daily notifications surviving device reboots (`BOOT_COMPLETED` / `MY_PACKAGE_REPLACED`)
+- **Daily reminders** - `WorkManager` & `AlarmManager` smart daily notifications surviving device reboots (`BOOT_COMPLETED` / `MY_PACKAGE_REPLACED`)
 
 ## Upgrade Compatibility
 
 Upgrading in-place from the previous Flutter release (`v2.0.0` and earlier) works seamlessly without uninstalling:
-- **Identical Package ID & Signing Key**: Uses `applicationId = "com.spin311.microsoft_automatic_rewards"` and the same `upload-keystore.jks` (`alias = "upload"`) certificate.
+- **Package ID & Signing Key**: Uses `applicationId = "com.znarfm.bing"` (namespace `com.znarfm.bing`) and the release `upload-keystore.jks` (`alias = "upload"`) certificate.
 - **Preserved Settings & Streaks**: `PreferencesRepository` reads and writes `FlutterSharedPreferences` with `flutter.*` keys and `Long`-encoded integers, preserving existing login state, streaks, theme, and reminder settings automatically.
 
 ## Build
@@ -48,23 +50,28 @@ cd android
 ## Project Structure
 
 ```
-android/app/src/main/kotlin/com/spin311/microsoft_automatic_rewards/
+android/app/src/main/kotlin/com/znarfm/bing/
 ├── MainActivity.kt                  # Edge-to-edge Compose host, shortcuts, system bars, notification receiver
 ├── data/
 │   ├── PreferencesRepository.kt     # FlutterSharedPreferences-compatible storage + streak calculation
 │   └── WordGenerator.kt             # Template-based natural search queries (distinct per run)
 ├── notifications/
 │   ├── NotificationHelper.kt        # Android 16 Live Updates (ProgressStyle + chip) & AlarmManager scheduling
-│   └── NotificationReceivers.kt     # DailyReminderReceiver & BootReceiver
-└── ui/
-    ├── SearchViewModel.kt           # StateFlow state, search coroutine loop, validation, haptics
-    ├── components/
-    │   └── ExpressiveComponents.kt  # ExpressiveButton, ExpressiveChoiceChip, WavyLinearProgressIndicator, FloatingNavBar
-    ├── screens/
-    │   ├── AmoledOverlay.kt         # Pure-black hold-to-wake (1.5s) & double-back overlay
-    │   ├── ConfigScreen.kt          # Theme selector, AMOLED toggle, streaks, data saver, reminders
-    │   ├── LoginScreen.kt           # Microsoft account sign-in flow & skip dialog
-    │   └── SearchScreen.kt          # Search controls, preset chips, progress card, persistent Bing WebView
-    └── theme/
-        └── Theme.kt                 # Material 3 Expressive dynamic color + pure-black AMOLED theme
+│   ├── NotificationReceivers.kt     # DailyReminderWorker & BootReceiver
+│   └── SearchForegroundService.kt   # DataSync foreground service & partial wakelock during active search runs
+├── ui/
+│   ├── SearchViewModel.kt           # StateFlow state, search coroutine loop, validation, haptics
+│   ├── components/
+│   │   └── ExpressiveComponents.kt  # ExpressiveButton, ExpressiveChoiceChip, WavyLinearProgressIndicator, FloatingNavBar
+│   ├── screens/
+│   │   ├── AmoledOverlay.kt         # Pure-black hold-to-wake (1.5s) & double-back overlay
+│   │   ├── ConfigScreen.kt          # Theme selector, AMOLED toggle, streaks, data saver, reminders, update check
+│   │   ├── LoginScreen.kt           # Microsoft account sign-in flow & skip dialog
+│   │   └── SearchScreen.kt          # Search controls, preset chips, progress card, persistent Bing WebView
+│   └── theme/
+│       └── Theme.kt                 # Material 3 Expressive dynamic color + pure-black AMOLED theme
+└── utils/
+    ├── HapticsHelper.kt             # Completion and interaction haptics
+    ├── InputValidators.kt           # Validation for search count and delay inputs
+    └── UpdateChecker.kt             # GitHub Releases update check, ABI-aware download & FileProvider installer
 ```

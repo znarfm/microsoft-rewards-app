@@ -7,9 +7,9 @@
         android:shortcutShortLabel="@string/shortcut_start_search_short"
         android:shortcutLongLabel="@string/shortcut_start_search_long">
         <intent
-            android:action="com.spin311.microsoft_automatic_rewards.START_SEARCH"
-            android:targetPackage="com.spin311.microsoft_automatic_rewards"
-            android:targetClass="com.spin311.microsoft_automatic_rewards.MainActivity">
+            android:action="com.znarfm.bing.START_SEARCH"
+            android:targetPackage="com.znarfm.bing"
+            android:targetClass="com.znarfm.bing.MainActivity">
             <extra
                 android:name="shortcut_action"
                 android:value="start_search" />

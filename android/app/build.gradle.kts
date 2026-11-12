@@ -5,15 +5,15 @@ plugins {
 }
 
 android {
-    namespace = "com.spin311.microsoft_automatic_rewards"
+    namespace = "com.znarfm.bing"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.spin311.microsoft_automatic_rewards"
+        applicationId = "com.znarfm.bing"
         minSdk = 24
         targetSdk = 36
-        versionCode = 27
-        versionName = "2.3.2"
+        versionCode = 28
+        versionName = "2.4.0"
     }
 
     compileOptions {
