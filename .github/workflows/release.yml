@@ -45,17 +45,13 @@ jobs:
             keytool -genkey -v -keystore android/app/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass microsoft -keypass microsoft -dname "CN=Reward Automator, OU=App, O=Org, L=City, S=State, C=US"
           fi
 
-      - name: Run Unit Tests
+      - name: Run Unit Tests & Build Release APKs
         working-directory: android
-        run: gradle testReleaseUnitTest --no-daemon
+        run: gradle testReleaseUnitTest assembleRelease
 
       - name: Build Release App Bundle (AAB)
         working-directory: android
-        run: gradle bundleRelease --no-daemon
-
-      - name: Build Universal & Split-per-ABI Release APKs
-        working-directory: android
-        run: gradle assembleRelease --no-daemon
+        run: gradle bundleRelease
 
       - name: Prepare Release Binaries
         run: |
