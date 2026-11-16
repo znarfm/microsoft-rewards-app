@@ -358,5 +358,15 @@ class RewardsUnitTest {
         assertEquals("microsoft-rewards-automator-arm64-v8a.apk", release.assetName)
         assertEquals("https://github.com/znarfm/microsoft-rewards-app/releases/download/v2.5.0/microsoft-rewards-automator-arm64-v8a.apk", release.downloadUrl)
     }
+
+    @Test
+    fun `shouldWaitAfterSearch skips cooldown on last search item`() {
+        assertFalse(SearchViewModel.shouldWaitAfterSearch(index = 0, totalCount = 1))
+        assertTrue(SearchViewModel.shouldWaitAfterSearch(index = 0, totalCount = 3))
+        assertTrue(SearchViewModel.shouldWaitAfterSearch(index = 1, totalCount = 3))
+        assertFalse(SearchViewModel.shouldWaitAfterSearch(index = 2, totalCount = 3))
+        assertFalse(SearchViewModel.shouldWaitAfterSearch(index = -1, totalCount = 3))
+        assertFalse(SearchViewModel.shouldWaitAfterSearch(index = 0, totalCount = 0))
+    }
 }
 

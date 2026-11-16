@@ -396,31 +396,33 @@ class SearchViewModel(
                         throw SearchFailedException(failMsg)
                     }
 
-                    // Start delay countdown only after successful page load
-                    val totalWaitMs = computeWaitMs(delaySec)
-                    val totalWaitSec = ((totalWaitMs + 999L) / 1000L).toInt().coerceAtLeast(1)
+                    // Start delay countdown only after successful page load, and skip after the last search
+                    if (shouldWaitAfterSearch(i, count)) {
+                        val totalWaitMs = computeWaitMs(delaySec)
+                        val totalWaitSec = ((totalWaitMs + 999L) / 1000L).toInt().coerceAtLeast(1)
 
-                    var remainingMs = totalWaitMs
-                    for (remSec in totalWaitSec downTo 1) {
-                        if (!isActive) throw CancellationException()
-                        _uiState.update {
-                            it.copy(
-                                searchState = SearchState.InProgress(
-                                    current = i + 1,
-                                    total = count,
-                                    remainingSeconds = remSec
+                        var remainingMs = totalWaitMs
+                        for (remSec in totalWaitSec downTo 1) {
+                            if (!isActive) throw CancellationException()
+                            _uiState.update {
+                                it.copy(
+                                    searchState = SearchState.InProgress(
+                                        current = i + 1,
+                                        total = count,
+                                        remainingSeconds = remSec
+                                    )
                                 )
+                            }
+                            NotificationHelper.showPromotedSearchProgress(
+                                context = appContext,
+                                current = i + 1,
+                                total = count,
+                                remainingSeconds = remSec
                             )
+                            val stepMs = remainingMs.coerceAtMost(1000L).coerceAtLeast(100L)
+                            delay(stepMs)
+                            remainingMs -= stepMs
                         }
-                        NotificationHelper.showPromotedSearchProgress(
-                            context = appContext,
-                            current = i + 1,
-                            total = count,
-                            remainingSeconds = remSec
-                        )
-                        val stepMs = remainingMs.coerceAtMost(1000L).coerceAtLeast(100L)
-                        delay(stepMs)
-                        remainingMs -= stepMs
                     }
                 }
 
@@ -598,6 +600,9 @@ class SearchViewModel(
             val jitterMs = random.nextLong(-maxJitterMs, maxJitterMs + 1L)
             return (baseMs + jitterMs).coerceAtLeast(1000L)
         }
+
+        fun shouldWaitAfterSearch(index: Int, totalCount: Int): Boolean =
+            index in 0 until (totalCount - 1)
 
         fun buildSearchUrl(encodedQuery: String): String =
             "https://www.bing.com/search?q=$encodedQuery&qs=n&form=QBLH&sp=-1&pq="
