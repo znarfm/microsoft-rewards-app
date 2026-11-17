@@ -593,7 +593,7 @@ fun ConfigScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(92.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
