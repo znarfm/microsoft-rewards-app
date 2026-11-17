@@ -253,9 +253,7 @@ class SearchViewModel(
     fun onAppForegroundChanged(inForeground: Boolean) {
         isInForeground = inForeground
         if (inForeground) {
-            if (_uiState.value.searchState !is SearchState.InProgress) {
-                NotificationHelper.cancelPromotedSearchProgress(appContext)
-            }
+            NotificationHelper.cancelPromotedSearchProgress(appContext)
             if (prefs.searchCancelledFromNotification) {
                 prefs.searchCancelledFromNotification = false
                 if (_uiState.value.searchState is SearchState.InProgress) {
@@ -265,7 +263,9 @@ class SearchViewModel(
             checkStreakStatus()
         } else {
             val state = _uiState.value.searchState
-            if (state is SearchState.InProgress) {
+            if (state is SearchState.InProgress &&
+                shouldShowProgressNotification(isInForeground = false, isSearching = true)
+            ) {
                 NotificationHelper.showPromotedSearchProgress(
                     context = appContext,
                     current = state.current,
@@ -324,12 +324,14 @@ class SearchViewModel(
                 searchState = SearchState.InProgress(current = 0, total = count, remainingSeconds = 0)
             )
         }
-        NotificationHelper.showPromotedSearchProgress(
-            context = appContext,
-            current = 0,
-            total = count,
-            remainingSeconds = 0
-        )
+        if (shouldShowProgressNotification(isInForeground = isInForeground, isSearching = true)) {
+            NotificationHelper.showPromotedSearchProgress(
+                context = appContext,
+                current = 0,
+                total = count,
+                remainingSeconds = 0
+            )
+        }
 
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
@@ -348,12 +350,14 @@ class SearchViewModel(
                             )
                         )
                     }
-                    NotificationHelper.showPromotedSearchProgress(
-                        context = appContext,
-                        current = i,
-                        total = count,
-                        remainingSeconds = 0
-                    )
+                    if (shouldShowProgressNotification(isInForeground = isInForeground, isSearching = true)) {
+                        NotificationHelper.showPromotedSearchProgress(
+                            context = appContext,
+                            current = i,
+                            total = count,
+                            remainingSeconds = 0
+                        )
+                    }
 
                     val query = queries.getOrElse(i) { WordGenerator.randomSentence() }
                     val encodedQuery = Uri.encode(query)
@@ -413,12 +417,14 @@ class SearchViewModel(
                                     )
                                 )
                             }
-                            NotificationHelper.showPromotedSearchProgress(
-                                context = appContext,
-                                current = i + 1,
-                                total = count,
-                                remainingSeconds = remSec
-                            )
+                            if (shouldShowProgressNotification(isInForeground = isInForeground, isSearching = true)) {
+                                NotificationHelper.showPromotedSearchProgress(
+                                    context = appContext,
+                                    current = i + 1,
+                                    total = count,
+                                    remainingSeconds = remSec
+                                )
+                            }
                             val stepMs = remainingMs.coerceAtMost(1000L).coerceAtLeast(100L)
                             delay(stepMs)
                             remainingMs -= stepMs
@@ -603,6 +609,9 @@ class SearchViewModel(
 
         fun shouldWaitAfterSearch(index: Int, totalCount: Int): Boolean =
             index in 0 until (totalCount - 1)
+
+        fun shouldShowProgressNotification(isInForeground: Boolean, isSearching: Boolean): Boolean =
+            !isInForeground && isSearching
 
         fun buildSearchUrl(encodedQuery: String): String =
             "https://www.bing.com/search?q=$encodedQuery&qs=n&form=QBLH&sp=-1&pq="

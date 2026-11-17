@@ -368,5 +368,13 @@ class RewardsUnitTest {
         assertFalse(SearchViewModel.shouldWaitAfterSearch(index = -1, totalCount = 3))
         assertFalse(SearchViewModel.shouldWaitAfterSearch(index = 0, totalCount = 0))
     }
+
+    @Test
+    fun `shouldShowProgressNotification returns true only when backgrounded and searching`() {
+        assertFalse(SearchViewModel.shouldShowProgressNotification(isInForeground = true, isSearching = true))
+        assertFalse(SearchViewModel.shouldShowProgressNotification(isInForeground = true, isSearching = false))
+        assertFalse(SearchViewModel.shouldShowProgressNotification(isInForeground = false, isSearching = false))
+        assertTrue(SearchViewModel.shouldShowProgressNotification(isInForeground = false, isSearching = true))
+    }
 }
 
