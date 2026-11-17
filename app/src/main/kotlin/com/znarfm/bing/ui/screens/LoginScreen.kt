@@ -299,7 +299,6 @@ fun LoginScreen(
                                 settings.userAgentString = SearchViewModel.sanitizeUserAgent(settings.userAgentString)
                                 settings.javaScriptEnabled = true
                                 settings.domStorageEnabled = true
-                                settings.databaseEnabled = true
                                 webViewClient = object : WebViewClient() {
                                     override fun onPageFinished(view: WebView?, url: String?) {
                                         super.onPageFinished(view, url)

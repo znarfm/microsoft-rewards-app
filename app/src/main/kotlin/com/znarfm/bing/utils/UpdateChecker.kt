@@ -32,6 +32,15 @@ object UpdateChecker {
         val assetName: String
     )
 
+    fun isTrustedHttpsUrl(urlStr: String): Boolean {
+        return try {
+            val url = URL(urlStr.trim())
+            url.protocol.equals("https", ignoreCase = true) && url.host.isNotBlank()
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
     fun isNewerVersion(currentVersion: String, latestTagOrVersion: String): Boolean {
         val currParts = parseVersionParts(currentVersion)
         val latestParts = parseVersionParts(latestTagOrVersion)
@@ -81,6 +90,7 @@ object UpdateChecker {
         supportedAbis: List<String>
     ): ReleaseInfo? {
         val tagName = extractJsonStringField(jsonStr, "tag_name") ?: return null
+        if (!isNewerVersion(currentVersion, tagName)) return null
         val htmlUrl = extractJsonStringField(jsonStr, "html_url") ?: ""
         val body = extractJsonStringField(jsonStr, "body") ?: ""
 
@@ -264,13 +274,7 @@ object UpdateChecker {
 
                 val jsonResponse = connection.inputStream.bufferedReader().use { it.readText() }
                 val abis = Build.SUPPORTED_ABIS.toList()
-                val info = parseLatestReleaseJson(jsonResponse, currentVersion, abis)
-
-                if (info != null && isNewerVersion(currentVersion, info.tagName)) {
-                    info
-                } else {
-                    null
-                }
+                parseLatestReleaseJson(jsonResponse, currentVersion, abis)
             } finally {
                 connection.disconnect()
             }
@@ -297,6 +301,9 @@ object UpdateChecker {
             val maxRedirects = 5
 
             while (true) {
+                if (!isTrustedHttpsUrl(currentUrl)) {
+                    throw IllegalArgumentException("Refusing non-HTTPS download URL: $currentUrl")
+                }
                 val url = URL(currentUrl)
                 connection = (url.openConnection() as HttpURLConnection).apply {
                     connectTimeout = TIMEOUT_MS

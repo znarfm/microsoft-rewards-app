@@ -49,13 +49,9 @@ import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.Update
 import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material.icons.rounded.VisibilityOff
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
@@ -64,11 +60,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -89,7 +82,9 @@ import com.znarfm.bing.BuildConfig
 import com.znarfm.bing.ui.AppUiState
 import com.znarfm.bing.ui.SearchState
 import com.znarfm.bing.ui.SearchViewModel
+import com.znarfm.bing.ui.components.ExitConfirmDialog
 import com.znarfm.bing.ui.components.ExpressiveSwitch
+import com.znarfm.bing.ui.components.ReminderTimePickerDialog
 import com.znarfm.bing.ui.theme.AppThemeMode
 
 private val ThemeOptionRows = listOf(
@@ -103,10 +98,7 @@ private val ThemeOptionRows = listOf(
     )
 )
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3ExpressiveApi::class
-)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ConfigScreen(
     uiState: AppUiState,
@@ -126,79 +118,25 @@ fun ConfigScreen(
     }
 
     if (showTimePicker) {
-        val pickerState = rememberTimePickerState(
+        ReminderTimePickerDialog(
             initialHour = uiState.reminderHour,
             initialMinute = uiState.reminderMinute,
-            is24Hour = true
-        )
-        AlertDialog(
-            onDismissRequest = { showTimePicker = false },
-            shape = RoundedCornerShape(28.dp),
-            title = {
-                Text(
-                    text = "Daily Reminder Time",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
+            onSave = { hour, minute ->
+                viewModel.updateReminderTime(hour, minute)
+                showTimePicker = false
             },
-            text = {
-                TimePicker(state = pickerState)
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.updateReminderTime(pickerState.hour, pickerState.minute)
-                        showTimePicker = false
-                    },
-                    shapes = ButtonDefaults.shapes()
-                ) {
-                    Text("Save", fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) {
-                    Text("Cancel")
-                }
-            }
+            onDismiss = { showTimePicker = false }
         )
     }
 
     if (showExitConfirm) {
-        AlertDialog(
-            onDismissRequest = { showExitConfirm = false },
-            shape = RoundedCornerShape(28.dp),
-            title = {
-                Text(
-                    text = "Exit App?",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
+        ExitConfirmDialog(
+            onConfirm = {
+                showExitConfirm = false
+                viewModel.cancelSearch()
+                onExitApp()
             },
-            text = {
-                Text("A search session is currently running. Exiting will stop the ongoing automation.")
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showExitConfirm = false
-                        viewModel.cancelSearch()
-                        onExitApp()
-                    },
-                    shapes = ButtonDefaults.shapes(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    )
-                ) {
-                    Text(
-                        text = "Exit",
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showExitConfirm = false }) {
-                    Text("Cancel")
-                }
-            }
+            onDismiss = { showExitConfirm = false }
         )
     }
 

@@ -216,12 +216,6 @@ class SearchViewModel(
         isInForeground = inForeground
         if (inForeground) {
             NotificationHelper.cancelPromotedSearchProgress(appContext)
-            if (prefs.searchCancelledFromNotification) {
-                prefs.searchCancelledFromNotification = false
-                if (_uiState.value.searchState is SearchState.InProgress) {
-                    cancelSearch()
-                }
-            }
             checkStreakStatus()
         } else {
             val state = _uiState.value.searchState
@@ -274,7 +268,6 @@ class SearchViewModel(
         val count = countStr.toInt()
         val delaySec = delayStr.toDouble()
 
-        prefs.searchCancelledFromNotification = false
         NotificationHelper.dismissedByUser = false
 
         _uiState.update {
@@ -543,9 +536,6 @@ class SearchViewModel(
     }
 
     companion object {
-        fun validateSearchCount(value: String?): String? = InputValidators.validateSearchCount(value)
-        fun validateDelay(value: String?): String? = InputValidators.validateDelay(value)
-
         fun hasBingAuthCookie(cookieHeader: String?): Boolean {
             if (cookieHeader.isNullOrBlank()) return false
             val cookies = cookieHeader.split(";")

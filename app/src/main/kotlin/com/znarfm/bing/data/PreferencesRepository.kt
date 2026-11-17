@@ -16,30 +16,42 @@ class PreferencesRepository(context: Context) {
         context.applicationContext.getSharedPreferences(PREFS_FILE_NAME, Context.MODE_PRIVATE)
 
     private fun getIntCompat(key: String, default: Int): Int {
-        val raw = prefs.all[key]
-        return when (raw) {
-            is Number -> raw.toInt()
-            is String -> raw.toIntOrNull() ?: default
-            else -> default
+        if (!prefs.contains(key)) return default
+        return try {
+            prefs.getLong(key, default.toLong()).toInt()
+        } catch (_: ClassCastException) {
+            when (val raw = prefs.all[key]) {
+                is Number -> raw.toInt()
+                is String -> raw.toIntOrNull() ?: default
+                else -> default
+            }
         }
     }
 
     private fun getBooleanCompat(key: String, default: Boolean): Boolean {
-        val raw = prefs.all[key]
-        return when (raw) {
-            is Boolean -> raw
-            is Number -> raw.toInt() != 0
-            is String -> raw.toBooleanStrictOrNull() ?: default
-            else -> default
+        if (!prefs.contains(key)) return default
+        return try {
+            prefs.getBoolean(key, default)
+        } catch (_: ClassCastException) {
+            when (val raw = prefs.all[key]) {
+                is Boolean -> raw
+                is Number -> raw.toInt() != 0
+                is String -> raw.toBooleanStrictOrNull() ?: default
+                else -> default
+            }
         }
     }
 
     private fun getStringCompat(key: String, default: String? = null): String? {
-        val raw = prefs.all[key]
-        return when (raw) {
-            is String -> raw
-            null -> default
-            else -> raw.toString()
+        if (!prefs.contains(key)) return default
+        return try {
+            prefs.getString(key, default)
+        } catch (_: ClassCastException) {
+            when (val raw = prefs.all[key]) {
+                is String -> raw
+                null -> default
+                else -> raw.toString()
+            }
         }
     }
 
@@ -116,10 +128,6 @@ class PreferencesRepository(context: Context) {
         get() = getStringCompat(KEY_LAST_COMPLETED_DATE, null)
         set(value) = prefs.edit().putString(KEY_LAST_COMPLETED_DATE, value).apply()
 
-    var searchCancelledFromNotification: Boolean
-        get() = getBooleanCompat(KEY_SEARCH_CANCELLED_FROM_NOTIFICATION, false)
-        set(value) = prefs.edit().putBoolean(KEY_SEARCH_CANCELLED_FROM_NOTIFICATION, value).apply()
-
     fun isCompletedToday(now: Calendar = Calendar.getInstance()): Boolean {
         return lastCompletedDate == todayString(now)
     }
@@ -174,7 +182,6 @@ class PreferencesRepository(context: Context) {
         const val KEY_BEST_STREAK = "flutter.best_streak"
         const val KEY_LAST_COMPLETED_DATE = "flutter.last_completed_date"
         const val KEY_HAPTIC_FEEDBACK = "flutter.haptic_feedback"
-        const val KEY_SEARCH_CANCELLED_FROM_NOTIFICATION = "flutter.search_cancelled_from_notification"
         const val KEY_AUTO_CHECK_UPDATES = "flutter.auto_check_updates"
 
         const val DEFAULT_SEARCH_COUNT = "22"

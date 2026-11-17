@@ -15,7 +15,7 @@ class DailyReminderWorker(
         val prefs = PreferencesRepository(applicationContext)
         if (!prefs.sendDailyReminder) return Result.success()
 
-        if (!prefs.isCompletedToday()) {
+        if (shouldSendReminder(prefs.sendDailyReminder, prefs.isCompletedToday())) {
             NotificationHelper.sendImmediateNotification(
                 context = applicationContext,
                 title = "Microsoft Rewards Reminder",

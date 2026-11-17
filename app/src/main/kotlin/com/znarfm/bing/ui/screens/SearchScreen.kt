@@ -15,7 +15,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,12 +40,10 @@ import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Timer
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
@@ -62,7 +59,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -85,6 +81,8 @@ import com.znarfm.bing.ui.AppUiState
 import com.znarfm.bing.ui.SearchState
 import com.znarfm.bing.ui.SearchViewModel
 import com.znarfm.bing.ui.components.ExpressiveWavyProgress
+import com.znarfm.bing.ui.components.LoginReminderDialog
+import com.znarfm.bing.ui.components.UpdateAvailableDialog
 import com.znarfm.bing.ui.theme.AppThemeMode
 import kotlin.math.roundToInt
 
@@ -119,7 +117,6 @@ fun SearchScreen(
             settings.userAgentString = SearchViewModel.sanitizeUserAgent(settings.userAgentString)
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
-            settings.databaseEnabled = true
             settings.mediaPlaybackRequiresUserGesture = true
             settings.blockNetworkImage = uiState.dataSaver
             webViewClient = object : WebViewClient() {
@@ -200,107 +197,19 @@ fun SearchScreen(
     }
 
     if (uiState.showLoginReminderPopup && !uiState.loginReminderShownThisSession) {
-        var dontShowAgain by remember { mutableStateOf(false) }
-        AlertDialog(
-            onDismissRequest = { viewModel.markLoginReminderShown(dontShowAgain) },
-            shape = RoundedCornerShape(28.dp),
-            title = {
-                Text(
-                    text = "Verify Bing Sign-In",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "Before starting your automated searches, please verify that your Microsoft account is signed in inside the Bing browser below so your points are credited."
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { dontShowAgain = !dontShowAgain }
-                    ) {
-                        Checkbox(
-                            checked = dontShowAgain,
-                            onCheckedChange = { dontShowAgain = it }
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Don't show this reminder again",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = { viewModel.markLoginReminderShown(dontShowAgain) },
-                    shapes = ButtonDefaults.shapes()
-                ) {
-                    Text("Got it", fontWeight = FontWeight.Bold)
-                }
-            }
+        LoginReminderDialog(
+            onConfirm = { dontShowAgain -> viewModel.markLoginReminderShown(dontShowAgain) }
         )
     }
 
     val release = uiState.availableUpdate
     if (release != null) {
-        AlertDialog(
-            onDismissRequest = {
-                if (!uiState.isDownloadingUpdate) {
-                    viewModel.dismissUpdateDialog()
-                }
-            },
-            shape = RoundedCornerShape(28.dp),
-            title = {
-                Text(
-                    text = "Update Available (${release.tagName})",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = release.releaseNotes.ifBlank { "A new version of Bing Rewards Automator is ready to install." }
-                    )
-                    if (uiState.isDownloadingUpdate) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        ExpressiveWavyProgress(
-                            progress = uiState.updateDownloadProgress,
-                            indeterminate = uiState.updateDownloadProgress <= 0f,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Downloading ${release.assetName}… ${(uiState.updateDownloadProgress * 100).toInt()}%",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontFeatureSettings = "tnum"
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = { viewModel.downloadAndInstallUpdate() },
-                    enabled = !uiState.isDownloadingUpdate,
-                    shapes = ButtonDefaults.shapes()
-                ) {
-                    Text("Update Now", fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { viewModel.dismissUpdateDialog() },
-                    enabled = !uiState.isDownloadingUpdate,
-                    shapes = ButtonDefaults.shapes()
-                ) {
-                    Text("Later")
-                }
-            }
+        UpdateAvailableDialog(
+            release = release,
+            isDownloading = uiState.isDownloadingUpdate,
+            downloadProgress = uiState.updateDownloadProgress,
+            onConfirm = { viewModel.downloadAndInstallUpdate() },
+            onDismiss = { viewModel.dismissUpdateDialog() }
         )
     }
 

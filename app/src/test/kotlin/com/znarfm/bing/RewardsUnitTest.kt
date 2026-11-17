@@ -4,6 +4,7 @@ import com.znarfm.bing.data.PreferencesRepository
 import com.znarfm.bing.data.WordGenerator
 import com.znarfm.bing.ui.SearchViewModel
 import com.znarfm.bing.ui.theme.AppThemeMode
+import com.znarfm.bing.utils.InputValidators
 import com.znarfm.bing.utils.UpdateChecker
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -142,17 +143,20 @@ class RewardsUnitTest {
     }
 
     @Test
-    fun `input validators enforce search count and delay limits`() {
-        assertNull(SearchViewModel.validateSearchCount("22"))
-        assertNull(SearchViewModel.validateSearchCount("50"))
-        assertNotNull(SearchViewModel.validateSearchCount("0"))
-        assertNotNull(SearchViewModel.validateSearchCount("51"))
-        assertNotNull(SearchViewModel.validateSearchCount("abc"))
+    fun `InputValidators enforces search count and delay limits`() {
+        assertNull(InputValidators.validateSearchCount("22"))
+        assertNull(InputValidators.validateSearchCount("30"))
+        assertNull(InputValidators.validateSearchCount("50"))
+        assertNotNull(InputValidators.validateSearchCount("0"))
+        assertNotNull(InputValidators.validateSearchCount("51"))
+        assertNotNull(InputValidators.validateSearchCount("abc"))
 
-        assertNull(SearchViewModel.validateDelay("0.5"))
-        assertNull(SearchViewModel.validateDelay("15"))
-        assertNotNull(SearchViewModel.validateDelay("0.2"))
-        assertNotNull(SearchViewModel.validateDelay("xyz"))
+        assertNull(InputValidators.validateDelay("0.5"))
+        assertNull(InputValidators.validateDelay("10"))
+        assertNull(InputValidators.validateDelay("15"))
+        assertNotNull(InputValidators.validateDelay("0.2"))
+        assertNotNull(InputValidators.validateDelay("0.4"))
+        assertNotNull(InputValidators.validateDelay("xyz"))
     }
 
     @Test
@@ -168,15 +172,6 @@ class RewardsUnitTest {
         val stateFull = com.znarfm.bing.ui.SearchState.InProgress(current = 20, total = 20)
         assertEquals(1.0f, stateFull.fraction, 0.001f)
         assertEquals(100, stateFull.percent)
-    }
-
-    @Test
-    fun `InputValidators enforces count and delay limits directly`() {
-        assertNull(com.znarfm.bing.utils.InputValidators.validateSearchCount("30"))
-        assertNotNull(com.znarfm.bing.utils.InputValidators.validateSearchCount("0"))
-        assertNotNull(com.znarfm.bing.utils.InputValidators.validateSearchCount("51"))
-        assertNull(com.znarfm.bing.utils.InputValidators.validateDelay("10"))
-        assertNotNull(com.znarfm.bing.utils.InputValidators.validateDelay("0.4"))
     }
 
     @Test
@@ -359,6 +354,17 @@ class RewardsUnitTest {
         assertEquals("## What's Changed\r\n- Bug fixes and improvements\r\n- Faster search delays", release.releaseNotes)
         assertEquals("microsoft-rewards-automator-arm64-v8a.apk", release.assetName)
         assertEquals("https://github.com/znarfm/microsoft-rewards-app/releases/download/v2.5.0/microsoft-rewards-automator-arm64-v8a.apk", release.downloadUrl)
+
+        assertNull(UpdateChecker.parseLatestReleaseJson(jsonPayload, "2.5.0", listOf("arm64-v8a")))
+        assertNull(UpdateChecker.parseLatestReleaseJson(jsonPayload, "2.6.0", listOf("arm64-v8a")))
+    }
+
+    @Test
+    fun `UpdateChecker isTrustedHttpsUrl accepts only valid https URLs`() {
+        assertTrue(UpdateChecker.isTrustedHttpsUrl("https://github.com/znarfm/microsoft-rewards-app/releases/download/v2.5.0/app.apk"))
+        assertFalse(UpdateChecker.isTrustedHttpsUrl("http://github.com/app.apk"))
+        assertFalse(UpdateChecker.isTrustedHttpsUrl("javascript:alert(1)"))
+        assertFalse(UpdateChecker.isTrustedHttpsUrl(""))
     }
 
     @Test

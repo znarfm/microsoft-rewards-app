@@ -43,7 +43,6 @@ class MainActivity : ComponentActivity() {
             when (intent?.action) {
                 NotificationHelper.STOP_SEARCH_ACTION -> {
                     NotificationHelper.cancelPromotedSearchProgress(context)
-                    viewModel.prefs.searchCancelledFromNotification = true
                     viewModel.cancelSearch()
                 }
                 NotificationHelper.DISMISS_PROGRESS_ACTION -> {
