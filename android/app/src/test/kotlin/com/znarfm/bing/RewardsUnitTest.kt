@@ -24,6 +24,8 @@ class RewardsUnitTest {
         assertEquals("flutter.amoled_screen_off", PreferencesRepository.KEY_AMOLED_SCREEN_OFF)
         assertEquals("flutter.completion_streak", PreferencesRepository.KEY_COMPLETION_STREAK)
         assertEquals("flutter.best_streak", PreferencesRepository.KEY_BEST_STREAK)
+        assertEquals("flutter.auto_check_updates", PreferencesRepository.KEY_AUTO_CHECK_UPDATES)
+        assertTrue(PreferencesRepository.DEFAULT_AUTO_CHECK_UPDATES)
     }
 
     @Test

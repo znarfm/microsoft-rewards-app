@@ -487,7 +487,7 @@ fun ConfigScreen(
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/znarfm"))
                         context.startActivity(intent)
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 4),
+                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 5),
                     leadingContent = {
                         Icon(
                             imageVector = Icons.Rounded.Code,
@@ -512,7 +512,7 @@ fun ConfigScreen(
 
                 SegmentedListItem(
                     onClick = {},
-                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = 4),
+                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = 5),
                     leadingContent = {
                         Icon(
                             imageVector = Icons.Rounded.Info,
@@ -535,9 +535,19 @@ fun ConfigScreen(
                     )
                 }
 
+                ConfigSwitchRow(
+                    icon = Icons.Rounded.SystemUpdate,
+                    title = "Auto-check for updates",
+                    subtitle = "Check GitHub Releases automatically on app launch",
+                    checked = uiState.autoCheckUpdates,
+                    onCheckedChange = { viewModel.setAutoCheckUpdates(it) },
+                    index = 2,
+                    count = 5
+                )
+
                 SegmentedListItem(
                     onClick = { viewModel.checkForUpdates(isManual = true) },
-                    shapes = ListItemDefaults.segmentedShapes(index = 2, count = 4),
+                    shapes = ListItemDefaults.segmentedShapes(index = 3, count = 5),
                     leadingContent = {
                         Icon(
                             imageVector = Icons.Rounded.SystemUpdate,
@@ -577,7 +587,7 @@ fun ConfigScreen(
                             onExitApp()
                         }
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 3, count = 4),
+                    shapes = ListItemDefaults.segmentedShapes(index = 4, count = 5),
                     leadingContent = {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ExitToApp,
