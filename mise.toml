@@ -5,7 +5,7 @@ gradle = "9.3.1"
 [tasks.test]
 description = "Run unit tests"
 dir = "android"
-run = "gradle testReleaseUnitTest"
+run = "gradle testDebugUnitTest"
 
 [tasks.build]
 description = "Build release APKs"

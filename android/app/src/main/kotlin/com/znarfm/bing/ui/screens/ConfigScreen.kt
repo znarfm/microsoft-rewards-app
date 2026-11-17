@@ -15,6 +15,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -75,6 +76,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -410,24 +412,12 @@ fun ConfigScreen(
             icon = Icons.Rounded.NotificationsActive
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
-                SegmentedListItem(
+                ConfigSegmentedItem(
+                    index = 0,
+                    count = 2,
                     onClick = { showTimePicker = true },
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.Rounded.AccessTime,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    },
-                    supportingContent = {
-                        Text(
-                            text = "Tap time badge to customize schedule",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
+                    icon = Icons.Rounded.AccessTime,
+                    supportingText = "Tap time badge to customize schedule",
                     trailingContent = {
                         ExpressiveSwitch(
                             checked = uiState.sendDailyReminder,
@@ -490,27 +480,16 @@ fun ConfigScreen(
             icon = Icons.Rounded.Info
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
-                SegmentedListItem(
+                ConfigSegmentedItem(
+                    index = 0,
+                    count = 5,
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/znarfm"))
                         context.startActivity(intent)
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 5),
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.Rounded.Code,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    },
-                    supportingContent = {
-                        Text(
-                            text = "@znarfm",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    icon = Icons.Rounded.Code,
+                    supportingText = "@znarfm",
+                    supportingColor = MaterialTheme.colorScheme.primary
                 ) {
                     Text(
                         text = "Developer",
@@ -518,24 +497,12 @@ fun ConfigScreen(
                     )
                 }
 
-                SegmentedListItem(
+                ConfigSegmentedItem(
+                    index = 1,
+                    count = 5,
                     onClick = {},
-                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = 5),
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.Rounded.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    },
-                    supportingContent = {
-                        Text(
-                            text = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    icon = Icons.Rounded.Info,
+                    supportingText = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
                 ) {
                     Text(
                         text = "Version",
@@ -553,27 +520,15 @@ fun ConfigScreen(
                     count = 5
                 )
 
-                SegmentedListItem(
+                ConfigSegmentedItem(
+                    index = 3,
+                    count = 5,
                     onClick = { viewModel.checkForUpdates(isManual = true) },
-                    shapes = ListItemDefaults.segmentedShapes(index = 3, count = 5),
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.Rounded.SystemUpdate,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    },
-                    supportingContent = {
-                        Text(
-                            text = if (uiState.isCheckingUpdate) {
-                                "Checking GitHub Releases…"
-                            } else {
-                                "Current: v${BuildConfig.VERSION_NAME} • Tap to check GitHub Releases"
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    icon = Icons.Rounded.SystemUpdate,
+                    supportingText = if (uiState.isCheckingUpdate) {
+                        "Checking GitHub Releases…"
+                    } else {
+                        "Current: v${BuildConfig.VERSION_NAME} • Tap to check GitHub Releases"
                     },
                     trailingContent = if (uiState.isCheckingUpdate) {
                         { LoadingIndicator(modifier = Modifier.size(24.dp)) }
@@ -587,7 +542,9 @@ fun ConfigScreen(
                     )
                 }
 
-                SegmentedListItem(
+                ConfigSegmentedItem(
+                    index = 4,
+                    count = 5,
                     onClick = {
                         if (uiState.searchState is SearchState.InProgress) {
                             showExitConfirm = true
@@ -595,15 +552,8 @@ fun ConfigScreen(
                             onExitApp()
                         }
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 4, count = 5),
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ExitToApp,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                    icon = Icons.AutoMirrored.Rounded.ExitToApp,
+                    iconTint = MaterialTheme.colorScheme.error
                 ) {
                     Text(
                         text = "Exit App",
@@ -659,6 +609,55 @@ private fun ConfigSectionCard(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
+private fun ConfigSegmentedItem(
+    index: Int,
+    count: Int,
+    onClick: () -> Unit,
+    icon: ImageVector,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
+    supportingText: String? = null,
+    supportingColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    trailingContent: (@Composable () -> Unit)? = null,
+    titleContent: @Composable () -> Unit
+) {
+    SegmentedListItem(
+        onClick = onClick,
+        shapes = ListItemDefaults.segmentedShapes(index = index, count = count),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                titleContent()
+                if (supportingText != null) {
+                    Text(
+                        text = supportingText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = supportingColor
+                    )
+                }
+            }
+            if (trailingContent != null) {
+                Spacer(modifier = Modifier.width(16.dp))
+                trailingContent()
+            }
+        }
+    }
+}
+
+@Composable
 private fun ConfigSwitchRow(
     icon: ImageVector,
     title: String,
@@ -668,24 +667,12 @@ private fun ConfigSwitchRow(
     index: Int,
     count: Int
 ) {
-    SegmentedListItem(
+    ConfigSegmentedItem(
+        index = index,
+        count = count,
         onClick = { onCheckedChange(!checked) },
-        shapes = ListItemDefaults.segmentedShapes(index = index, count = count),
-        leadingContent = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp)
-            )
-        },
-        supportingContent = {
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
+        icon = icon,
+        supportingText = subtitle,
         trailingContent = {
             ExpressiveSwitch(
                 checked = checked,
