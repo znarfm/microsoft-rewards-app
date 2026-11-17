@@ -15,6 +15,8 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,17 +49,24 @@ import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,6 +77,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -75,10 +87,14 @@ import com.znarfm.bing.BuildConfig
 import com.znarfm.bing.ui.AppUiState
 import com.znarfm.bing.ui.SearchState
 import com.znarfm.bing.ui.SearchViewModel
-import com.znarfm.bing.ui.components.ExpressiveChoiceChip
+import com.znarfm.bing.ui.components.ExpressiveSwitch
 import com.znarfm.bing.ui.theme.AppThemeMode
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalLayoutApi::class
+)
 @Composable
 fun ConfigScreen(
     uiState: AppUiState,
@@ -116,11 +132,12 @@ fun ConfigScreen(
                 TimePicker(state = pickerState)
             },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         viewModel.updateReminderTime(pickerState.hour, pickerState.minute)
                         showTimePicker = false
-                    }
+                    },
+                    shapes = ButtonDefaults.shapes()
                 ) {
                     Text("Save", fontWeight = FontWeight.Bold)
                 }
@@ -147,16 +164,20 @@ fun ConfigScreen(
                 Text("A search session is currently running. Exiting will stop the ongoing automation.")
             },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         showExitConfirm = false
                         viewModel.cancelSearch()
                         onExitApp()
-                    }
+                    },
+                    shapes = ButtonDefaults.shapes(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
                 ) {
                     Text(
                         text = "Exit",
-                        color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -189,76 +210,84 @@ fun ConfigScreen(
                 modifier = Modifier.padding(bottom = 10.dp)
             )
 
-            Row(
+            val themeOptions = listOf(
+                AppThemeMode.SYSTEM to Icons.Rounded.BrightnessAuto,
+                AppThemeMode.LIGHT to Icons.Rounded.LightMode,
+                AppThemeMode.DARK to Icons.Rounded.DarkMode,
+                AppThemeMode.AMOLED to Icons.Rounded.Contrast
+            )
+
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                ExpressiveChoiceChip(
-                    label = AppThemeMode.SYSTEM.label,
-                    icon = Icons.Rounded.BrightnessAuto,
-                    selected = uiState.themeMode == AppThemeMode.SYSTEM,
-                    onClick = { viewModel.setThemeMode(AppThemeMode.SYSTEM) },
-                    modifier = Modifier.weight(1f)
-                )
-                ExpressiveChoiceChip(
-                    label = AppThemeMode.LIGHT.label,
-                    icon = Icons.Rounded.LightMode,
-                    selected = uiState.themeMode == AppThemeMode.LIGHT,
-                    onClick = { viewModel.setThemeMode(AppThemeMode.LIGHT) },
-                    modifier = Modifier.weight(1f)
-                )
+                themeOptions.forEachIndexed { idx, (mode, icon) ->
+                    val shapes = when (idx) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        themeOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    }
+                    ToggleButton(
+                        checked = uiState.themeMode == mode,
+                        onCheckedChange = { viewModel.setThemeMode(mode) },
+                        shapes = shapes,
+                        modifier = Modifier.semantics { role = Role.RadioButton }
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(ToggleButtonDefaults.IconSize)
+                        )
+                        Spacer(modifier = Modifier.size(ToggleButtonDefaults.IconSpacing))
+                        Text(
+                            text = mode.label,
+                            maxLines = 1
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                ExpressiveChoiceChip(
-                    label = AppThemeMode.DARK.label,
-                    icon = Icons.Rounded.DarkMode,
-                    selected = uiState.themeMode == AppThemeMode.DARK,
-                    onClick = { viewModel.setThemeMode(AppThemeMode.DARK) },
-                    modifier = Modifier.weight(1f)
-                )
-                ExpressiveChoiceChip(
-                    label = AppThemeMode.AMOLED.label,
-                    icon = Icons.Rounded.Contrast,
-                    selected = uiState.themeMode == AppThemeMode.AMOLED,
-                    onClick = { viewModel.setThemeMode(AppThemeMode.AMOLED) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            val isAmoled = uiState.themeMode == AppThemeMode.AMOLED
+            val displaySwitchCount = if (isAmoled) 2 else 1
 
-            AnimatedVisibility(
-                visible = uiState.themeMode == AppThemeMode.AMOLED,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                Column {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
+                AnimatedVisibility(
+                    visible = isAmoled,
+                    enter = expandVertically(
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                    ) + fadeIn(
+                        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()
+                    ),
+                    exit = shrinkVertically(
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                    ) + fadeOut(
+                        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()
+                    )
+                ) {
                     ConfigSwitchRow(
                         icon = Icons.Rounded.VisibilityOff,
                         title = "Simulate screen off (AMOLED)",
                         subtitle = "Black out screen while search runs (hold 1.5s to wake)",
                         checked = uiState.amoledOverlay,
-                        onCheckedChange = { viewModel.setAmoledOverlay(it) }
+                        onCheckedChange = { viewModel.setAmoledOverlay(it) },
+                        index = 0,
+                        count = 2
                     )
                 }
+
+                ConfigSwitchRow(
+                    icon = Icons.Rounded.ScreenLockPortrait,
+                    title = "Keep screen on during search",
+                    subtitle = "Prevents phone from sleeping while automating",
+                    checked = uiState.keepScreenOn,
+                    onCheckedChange = { viewModel.setKeepScreenOn(it) },
+                    index = if (isAmoled) 1 else 0,
+                    count = displaySwitchCount
+                )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-
-            ConfigSwitchRow(
-                icon = Icons.Rounded.ScreenLockPortrait,
-                title = "Keep screen on during search",
-                subtitle = "Prevents phone from sleeping while automating",
-                checked = uiState.keepScreenOn,
-                onCheckedChange = { viewModel.setKeepScreenOn(it) }
-            )
         }
 
         // 2. Streak & Activity Card
@@ -289,7 +318,8 @@ fun ConfigScreen(
                         Text(
                             text = "${uiState.currentStreak} days",
                             style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.ExtraBold,
+                                fontFeatureSettings = "tnum"
                             )
                         )
                         Text(
@@ -319,7 +349,8 @@ fun ConfigScreen(
                         Text(
                             text = "${uiState.bestStreak} days",
                             style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.ExtraBold,
+                                fontFeatureSettings = "tnum"
                             )
                         )
                         Text(
@@ -337,23 +368,27 @@ fun ConfigScreen(
             title = "Optimization & Automation",
             icon = Icons.Rounded.Speed
         ) {
-            ConfigSwitchRow(
-                icon = Icons.Rounded.DataSaverOn,
-                title = "Data Saver Mode",
-                subtitle = "Blocks WebView images & media for faster searches (turn off if points fail to credit)",
-                checked = uiState.dataSaver,
-                onCheckedChange = { viewModel.setDataSaver(it) }
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
+                ConfigSwitchRow(
+                    icon = Icons.Rounded.DataSaverOn,
+                    title = "Data Saver Mode",
+                    subtitle = "Blocks WebView images & media for faster searches (turn off if points fail to credit)",
+                    checked = uiState.dataSaver,
+                    onCheckedChange = { viewModel.setDataSaver(it) },
+                    index = 0,
+                    count = 2
+                )
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-
-            ConfigSwitchRow(
-                icon = Icons.Rounded.Vibration,
-                title = "Completion Haptics",
-                subtitle = "Vibrate with celebratory pattern when daily searches finish",
-                checked = uiState.hapticFeedback,
-                onCheckedChange = { viewModel.setHapticFeedback(it) }
-            )
+                ConfigSwitchRow(
+                    icon = Icons.Rounded.Vibration,
+                    title = "Completion Haptics",
+                    subtitle = "Vibrate with celebratory pattern when daily searches finish",
+                    checked = uiState.hapticFeedback,
+                    onCheckedChange = { viewModel.setHapticFeedback(it) },
+                    index = 1,
+                    count = 2
+                )
+            }
         }
 
         // 4. Reminders Card
@@ -361,20 +396,44 @@ fun ConfigScreen(
             title = "Reminders",
             icon = Icons.Rounded.NotificationsActive
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.AccessTime,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
+            Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
+                SegmentedListItem(
+                    onClick = { showTimePicker = true },
+                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Rounded.AccessTime,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    },
+                    supportingContent = {
+                        Text(
+                            text = "Tap time badge to customize schedule",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingContent = {
+                        ExpressiveSwitch(
+                            checked = uiState.sendDailyReminder,
+                            onCheckedChange = { enabled ->
+                                if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    val hasPerm = ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                    if (!hasPerm) {
+                                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                        return@ExpressiveSwitch
+                                    }
+                                }
+                                viewModel.setDailyReminder(enabled)
+                            }
+                        )
+                    }
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "Daily reminder at ",
@@ -391,45 +450,25 @@ fun ConfigScreen(
                             Text(
                                 text = "%02d:%02d".format(uiState.reminderHour, uiState.reminderMinute),
                                 style = MaterialTheme.typography.labelLarge.copy(
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    fontFeatureSettings = "tnum"
                                 ),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
                     }
-                    Text(
-                        text = "Tap time badge to customize schedule",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
-                Switch(
-                    checked = uiState.sendDailyReminder,
-                    onCheckedChange = { enabled ->
-                        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            val hasPerm = ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.POST_NOTIFICATIONS
-                            ) == PackageManager.PERMISSION_GRANTED
-                            if (!hasPerm) {
-                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                return@Switch
-                            }
-                        }
-                        viewModel.setDailyReminder(enabled)
-                    }
+
+                ConfigSwitchRow(
+                    icon = Icons.Rounded.Info,
+                    title = "Show login reminder on launch",
+                    subtitle = "Prompt to verify Bing sign-in when app opens",
+                    checked = uiState.showLoginReminderPopup,
+                    onCheckedChange = { viewModel.setShowLoginReminderPopup(it) },
+                    index = 1,
+                    count = 2
                 )
             }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-
-            ConfigSwitchRow(
-                icon = Icons.Rounded.Info,
-                title = "Show login reminder on launch",
-                subtitle = "Prompt to verify Bing sign-in when app opens",
-                checked = uiState.showLoginReminderPopup,
-                onCheckedChange = { viewModel.setShowLoginReminderPopup(it) }
-            )
         }
 
         // 5. App Info Card
@@ -437,126 +476,120 @@ fun ConfigScreen(
             title = "App",
             icon = Icons.Rounded.Info
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
+            Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
+                SegmentedListItem(
+                    onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/znarfm"))
                         context.startActivity(intent)
+                    },
+                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 4),
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Rounded.Code,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    },
+                    supportingContent = {
+                        Text(
+                            text = "@znarfm",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
-                    .padding(vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Code,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
+                ) {
                     Text(
                         text = "Developer",
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
                     )
-                    Text(
-                        text = "@znarfm",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
                 }
-            }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Info,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
+                SegmentedListItem(
+                    onClick = {},
+                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = 4),
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Rounded.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    },
+                    supportingContent = {
+                        Text(
+                            text = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                ) {
                     Text(
                         text = "Version",
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
                     )
-                    Text(
-                        text = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
-            }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { viewModel.checkForUpdates(isManual = true) }
-                    .padding(vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.SystemUpdate,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
+                SegmentedListItem(
+                    onClick = { viewModel.checkForUpdates(isManual = true) },
+                    shapes = ListItemDefaults.segmentedShapes(index = 2, count = 4),
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Rounded.SystemUpdate,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    },
+                    supportingContent = {
+                        Text(
+                            text = if (uiState.isCheckingUpdate) {
+                                "Checking GitHub Releases…"
+                            } else {
+                                "Current: v${BuildConfig.VERSION_NAME} • Tap to check GitHub Releases"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingContent = if (uiState.isCheckingUpdate) {
+                        { LoadingIndicator(modifier = Modifier.size(24.dp)) }
+                    } else {
+                        null
+                    }
+                ) {
                     Text(
                         text = "Check for Updates",
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
                     )
-                    Text(
-                        text = if (uiState.isCheckingUpdate) {
-                            "Checking GitHub Releases…"
-                        } else {
-                            "Current: v${BuildConfig.VERSION_NAME} • Tap to check GitHub Releases"
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
-            }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
+                SegmentedListItem(
+                    onClick = {
                         if (uiState.searchState is SearchState.InProgress) {
                             showExitConfirm = true
                         } else {
                             onExitApp()
                         }
+                    },
+                    shapes = ListItemDefaults.segmentedShapes(index = 3, count = 4),
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ExitToApp,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
-                    .padding(vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ExitToApp,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Exit App",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.error
+                ) {
+                    Text(
+                        text = "Exit App",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.error
+                        )
                     )
-                )
+                }
             }
         }
 
@@ -601,43 +634,45 @@ private fun ConfigSectionCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ConfigSwitchRow(
     icon: ImageVector,
     title: String,
     subtitle: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    index: Int,
+    count: Int
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(22.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+    SegmentedListItem(
+        onClick = { onCheckedChange(!checked) },
+        shapes = ListItemDefaults.segmentedShapes(index = index, count = count),
+        leadingContent = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp)
             )
+        },
+        supportingContent = {
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        },
+        trailingContent = {
+            ExpressiveSwitch(
+                checked = checked,
+                onCheckedChange = onCheckedChange
+            )
         }
-        Spacer(modifier = Modifier.width(8.dp))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
         )
     }
 }

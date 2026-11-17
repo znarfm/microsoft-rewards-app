@@ -4,9 +4,11 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -19,9 +21,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.LockOpen
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -35,6 +40,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -47,6 +53,7 @@ import kotlin.math.roundToInt
 private const val HOLD_TO_WAKE_MS = 1500
 private const val DOUBLE_BACK_WINDOW_MS = 2000L
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AmoledOverlay(
     onDismiss: () -> Unit
@@ -58,6 +65,18 @@ fun AmoledOverlay(
     var touchPosition by remember { mutableStateOf<Offset?>(null) }
     val holdProgress = remember { Animatable(0f) }
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
+
+    val isHolding = touchPosition != null && holdProgress.value > 0f
+    val indicatorScale by animateFloatAsState(
+        targetValue = if (isHolding) 1f else 0.8f,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "holdIndicatorScale"
+    )
+    val indicatorAlpha by animateFloatAsState(
+        targetValue = if (isHolding) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "holdIndicatorAlpha"
+    )
 
     BackHandler {
         val now = System.currentTimeMillis()
@@ -106,8 +125,10 @@ fun AmoledOverlay(
         val pos = touchPosition
         val progress = holdProgress.value
         if (pos != null && progress > 0f) {
-            val indicatorSize = 110.dp
-            val halfPx = with(density) { (indicatorSize / 2).toPx() }
+            val backdropSize = 132.dp
+            val ringSize = 104.dp
+            val halfPx = with(density) { (backdropSize / 2).toPx() }
+            val burstShape = MaterialShapes.SoftBurst.toShape()
 
             Box(
                 modifier = Modifier
@@ -117,10 +138,28 @@ fun AmoledOverlay(
                             y = (pos.y - halfPx).roundToInt()
                         )
                     }
-                    .size(indicatorSize),
+                    .size(backdropSize)
+                    .graphicsLayer {
+                        scaleX = indicatorScale
+                        scaleY = indicatorScale
+                        alpha = indicatorAlpha
+                    },
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            color = Color.White.copy(alpha = 0.05f),
+                            shape = burstShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color.White.copy(alpha = 0.08f),
+                            shape = burstShape
+                        )
+                )
+                Canvas(modifier = Modifier.size(ringSize)) {
                     val stroke = 5.dp.toPx()
                     drawCircle(
                         color = Color.White.copy(alpha = 0.16f),

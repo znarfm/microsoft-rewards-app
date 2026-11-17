@@ -33,7 +33,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v4.3.1
         with:
-          gradle-version: '8.14.3'
+          gradle-version: '9.3.1'
 
       - name: Setup Keystore
         env:
@@ -47,7 +47,7 @@ jobs:
 
       - name: Run Unit Tests & Build Release APKs
         working-directory: android
-        run: gradle testReleaseUnitTest assembleRelease
+        run: gradle testDebugUnitTest assembleRelease
 
       - name: Build Release App Bundle (AAB)
         working-directory: android

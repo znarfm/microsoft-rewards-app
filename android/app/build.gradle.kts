@@ -1,28 +1,29 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
 }
 
 android {
     namespace = "com.znarfm.bing"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.znarfm.bing"
         minSdk = 24
         targetSdk = 36
-        versionCode = 31
-        versionName = "2.4.3"
+        versionCode = 32
+        versionName = "2.5.0"
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
     }
 
     buildFeatures {
@@ -70,7 +71,7 @@ android {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2025.02.00")
+    val composeBom = platform("androidx.compose:compose-bom-beta:2026.11.00")
     implementation(composeBom)
 
     implementation("androidx.core:core-ktx:1.15.0")
@@ -82,7 +83,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material3:material3:1.5.0-rc01")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.work:work-runtime-ktx:2.10.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
