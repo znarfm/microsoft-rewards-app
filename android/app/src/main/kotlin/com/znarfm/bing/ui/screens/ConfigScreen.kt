@@ -15,8 +15,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -92,8 +90,7 @@ import com.znarfm.bing.ui.theme.AppThemeMode
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3ExpressiveApi::class,
-    ExperimentalLayoutApi::class
+    ExperimentalMaterial3ExpressiveApi::class
 )
 @Composable
 fun ConfigScreen(
@@ -217,33 +214,41 @@ fun ConfigScreen(
                 AppThemeMode.AMOLED to Icons.Rounded.Contrast
             )
 
-            FlowRow(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                themeOptions.forEachIndexed { idx, (mode, icon) ->
-                    val shapes = when (idx) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        themeOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    }
-                    ToggleButton(
-                        checked = uiState.themeMode == mode,
-                        onCheckedChange = { viewModel.setThemeMode(mode) },
-                        shapes = shapes,
-                        modifier = Modifier.semantics { role = Role.RadioButton }
+                themeOptions.chunked(2).forEach { rowItems ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
                     ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(ToggleButtonDefaults.IconSize)
-                        )
-                        Spacer(modifier = Modifier.size(ToggleButtonDefaults.IconSpacing))
-                        Text(
-                            text = mode.label,
-                            maxLines = 1
-                        )
+                        rowItems.forEachIndexed { idx, (mode, icon) ->
+                            val shapes = if (idx == 0) {
+                                ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            } else {
+                                ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            }
+                            ToggleButton(
+                                checked = uiState.themeMode == mode,
+                                onCheckedChange = { viewModel.setThemeMode(mode) },
+                                shapes = shapes,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .semantics { role = Role.RadioButton }
+                            ) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ToggleButtonDefaults.IconSize)
+                                )
+                                Spacer(modifier = Modifier.size(ToggleButtonDefaults.IconSpacing))
+                                Text(
+                                    text = mode.label,
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
                 }
             }
