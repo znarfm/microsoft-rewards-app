@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -45,11 +46,19 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -58,6 +67,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -79,15 +90,15 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.znarfm.bing.ui.AppUiState
 import com.znarfm.bing.ui.SearchState
 import com.znarfm.bing.ui.SearchViewModel
-import com.znarfm.bing.ui.components.ExpressiveButton
-import com.znarfm.bing.ui.components.ExpressiveFloatingNavBar
-import com.znarfm.bing.ui.components.ExpressiveIconButton
-import com.znarfm.bing.ui.components.NavTabItem
-import com.znarfm.bing.ui.components.WavyLinearProgressIndicator
+import com.znarfm.bing.ui.components.ExpressiveWavyProgress
 import com.znarfm.bing.ui.theme.AppThemeMode
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalLayoutApi::class
+)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun SearchScreen(
@@ -232,8 +243,9 @@ fun SearchScreen(
                 }
             },
             confirmButton = {
-                TextButton(
-                    onClick = { viewModel.markLoginReminderShown(dontShowAgain) }
+                Button(
+                    onClick = { viewModel.markLoginReminderShown(dontShowAgain) },
+                    shapes = ButtonDefaults.shapes()
                 ) {
                     Text("Got it", fontWeight = FontWeight.Bold)
                 }
@@ -263,20 +275,34 @@ fun SearchScreen(
                     )
                     if (uiState.isDownloadingUpdate) {
                         Spacer(modifier = Modifier.height(16.dp))
-                        WavyLinearProgressIndicator(progress = uiState.updateDownloadProgress)
+                        if (uiState.updateDownloadProgress <= 0f) {
+                            ExpressiveWavyProgress(
+                                progress = 0f,
+                                indeterminate = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            ExpressiveWavyProgress(
+                                progress = uiState.updateDownloadProgress,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Downloading ${release.assetName}… ${(uiState.updateDownloadProgress * 100).toInt()}%",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontFeatureSettings = "tnum"
+                            ),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = { viewModel.downloadAndInstallUpdate() },
-                    enabled = !uiState.isDownloadingUpdate
+                    enabled = !uiState.isDownloadingUpdate,
+                    shapes = ButtonDefaults.shapes()
                 ) {
                     Text("Update Now", fontWeight = FontWeight.Bold)
                 }
@@ -284,7 +310,8 @@ fun SearchScreen(
             dismissButton = {
                 TextButton(
                     onClick = { viewModel.dismissUpdateDialog() },
-                    enabled = !uiState.isDownloadingUpdate
+                    enabled = !uiState.isDownloadingUpdate,
+                    shapes = ButtonDefaults.shapes()
                 ) {
                     Text("Later")
                 }
@@ -329,15 +356,15 @@ fun SearchScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        Column {
-                            Text(
-                                text = "Bing Rewards Automator",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.ExtraBold
-                                )
+                        Text(
+                            text = "Bing Rewards Automator",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.ExtraBold
                             )
-                            StatusSubtitle(uiState = uiState)
-                        }
+                        )
+                    },
+                    subtitle = {
+                        StatusSubtitle(uiState = uiState)
                     },
                     actions = {
                         StreakBadge(
@@ -345,11 +372,15 @@ fun SearchScreen(
                             bestStreak = uiState.bestStreak
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        ExpressiveIconButton(
-                            icon = Icons.Rounded.EmojiEvents,
-                            contentDescription = "Open Rewards Dashboard",
-                            onClick = { viewModel.openRewardsDashboard() }
-                        )
+                        FilledTonalIconButton(
+                            onClick = { viewModel.openRewardsDashboard() },
+                            shapes = IconButtonDefaults.shapes()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.EmojiEvents,
+                                contentDescription = "Open Rewards Dashboard"
+                            )
+                        }
                         Spacer(modifier = Modifier.width(12.dp))
                     }
                 )
@@ -386,31 +417,51 @@ fun SearchScreen(
                     }
                 }
 
-                // Floating Pill Navigation Bar at bottom center (hidden when keyboard is open)
+                // Floating Toolbar at bottom center (hidden when keyboard is open)
                 AnimatedVisibility(
                     visible = !isImeVisible,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
+                    enter = fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
+                    exit = fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
                         .padding(bottom = 12.dp)
                 ) {
-                    ExpressiveFloatingNavBar(
-                        items = listOf(
-                            NavTabItem(
-                                label = "Search",
-                                selectedIcon = Icons.Rounded.Search,
-                                unselectedIcon = Icons.Outlined.Search
-                            ),
-                            NavTabItem(
-                                label = "Config",
-                                selectedIcon = Icons.Rounded.Settings,
-                                unselectedIcon = Icons.Outlined.Settings
+                    HorizontalFloatingToolbar(
+                        expanded = true,
+                        floatingActionButton = {},
+                        colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors()
+                    ) {
+                        val searchSelected = uiState.selectedTab == 0
+                        val configSelected = uiState.selectedTab == 1
+                        ToggleButton(
+                            checked = searchSelected,
+                            onCheckedChange = { if (!searchSelected) viewModel.selectTab(0) },
+                            shapes = ToggleButtonDefaults.shapes()
+                        ) {
+                            Icon(
+                                imageVector = if (searchSelected) Icons.Rounded.Search else Icons.Outlined.Search,
+                                contentDescription = null,
+                                modifier = Modifier.size(ToggleButtonDefaults.IconSize)
                             )
-                        ),
-                        selectedIndex = uiState.selectedTab,
-                        onSelect = { viewModel.selectTab(it) }
-                    )
+                            Spacer(modifier = Modifier.width(ToggleButtonDefaults.IconSpacing))
+                            Text("Search")
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        ToggleButton(
+                            checked = configSelected,
+                            onCheckedChange = { if (!configSelected) viewModel.selectTab(1) },
+                            shapes = ToggleButtonDefaults.shapes()
+                        ) {
+                            Icon(
+                                imageVector = if (configSelected) Icons.Rounded.Settings else Icons.Outlined.Settings,
+                                contentDescription = null,
+                                modifier = Modifier.size(ToggleButtonDefaults.IconSize)
+                            )
+                            Spacer(modifier = Modifier.width(ToggleButtonDefaults.IconSpacing))
+                            Text("Config")
+                        }
+                    }
                 }
             }
         }
@@ -457,7 +508,10 @@ private fun StatusSubtitle(uiState: AppUiState) {
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = statusText,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.Medium,
+                fontFeatureSettings = "tnum"
+            ),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
@@ -480,13 +534,16 @@ private fun StreakBadge(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontFeatureSettings = "tnum"
+            ),
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
         )
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SearchTabContent(
     uiState: AppUiState,
@@ -586,8 +643,10 @@ private fun SearchTabContent(
                 // Active Search Progress Card
                 AnimatedVisibility(
                     visible = isSearching,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut()
+                    enter = expandVertically(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                        fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
+                    exit = shrinkVertically(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                        fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec())
                 ) {
                     val progressState = uiState.searchState as? SearchState.InProgress
                     if (progressState != null) {
@@ -615,17 +674,26 @@ private fun SearchTabContent(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = if (progressState.remainingSeconds > 0) {
-                                            "Next search in ${progressState.remainingSeconds}s…"
-                                        } else {
-                                            "Searching…"
-                                        },
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        if (progressState.remainingSeconds == 0) {
+                                            LoadingIndicator(modifier = Modifier.size(18.dp))
+                                        }
+                                        Text(
+                                            text = if (progressState.remainingSeconds > 0) {
+                                                "Next search in ${progressState.remainingSeconds}s…"
+                                            } else {
+                                                "Searching…"
+                                            },
+                                            style = MaterialTheme.typography.labelLarge.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontFeatureSettings = "tnum"
+                                            ),
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                     Surface(
                                         shape = RoundedCornerShape(10.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer,
@@ -634,14 +702,18 @@ private fun SearchTabContent(
                                         Text(
                                             text = "$percent%",
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Bold
+                                                fontWeight = FontWeight.Bold,
+                                                fontFeatureSettings = "tnum"
                                             ),
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                         )
                                     }
                                 }
 
-                                WavyLinearProgressIndicator(progress = frac)
+                                ExpressiveWavyProgress(
+                                    progress = frac,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -649,12 +721,16 @@ private fun SearchTabContent(
                                 ) {
                                     Text(
                                         text = "${progressState.current}/${progressState.total} completed",
-                                        style = MaterialTheme.typography.bodySmall,
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            fontFeatureSettings = "tnum"
+                                        ),
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
                                         text = estFormatted,
-                                        style = MaterialTheme.typography.bodySmall,
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            fontFeatureSettings = "tnum"
+                                        ),
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -663,12 +739,8 @@ private fun SearchTabContent(
                     }
                 }
 
-                // Dual-morphing Start / Cancel Button
-                ExpressiveButton(
-                    text = if (isSearching) "Cancel Search" else "Start Search",
-                    icon = if (isSearching) Icons.Rounded.Cancel else Icons.Rounded.PlayArrow,
-                    isActive = isSearching,
-                    isDestructive = isSearching,
+                // Start / Cancel Button
+                Button(
                     onClick = {
                         if (isSearching) {
                             viewModel.cancelSearch()
@@ -676,8 +748,31 @@ private fun SearchTabContent(
                             viewModel.startSearch()
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    shapes = ButtonDefaults.shapes(),
+                    colors = if (isSearching) {
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    } else {
+                        ButtonDefaults.buttonColors()
+                    },
+                    contentPadding = ButtonDefaults.ContentPadding,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isSearching) Icons.Rounded.Cancel else Icons.Rounded.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                    )
+                    Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
+                    Text(
+                        text = if (isSearching) "Cancel Search" else "Start Search",
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
             }
         }
     }

@@ -26,16 +26,23 @@ import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.LockPerson
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -49,14 +56,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.znarfm.bing.ui.SearchViewModel
-import com.znarfm.bing.ui.components.ExpressiveButton
-import com.znarfm.bing.ui.components.ExpressiveIconButton
-import com.znarfm.bing.ui.components.WavyLinearProgressIndicator
+import com.znarfm.bing.ui.components.ExpressiveWavyProgress
 
 private const val MICROSOFT_LOGIN_URL =
     "https://login.live.com/login.srf?wa=wsignin1.0&wp=MBI_SSL&wreply=https%3A%2F%2Fwww.bing.com%2F"
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun LoginScreen(
@@ -93,17 +98,21 @@ fun LoginScreen(
                 )
             },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         showSkipDialog = false
                         onLoggedIn()
-                    }
+                    },
+                    shapes = ButtonDefaults.shapes()
                 ) {
                     Text("Skip Anyway", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showSkipDialog = false }) {
+                TextButton(
+                    onClick = { showSkipDialog = false },
+                    shapes = ButtonDefaults.shapes()
+                ) {
                     Text("Cancel")
                 }
             }
@@ -122,11 +131,15 @@ fun LoginScreen(
                     },
                     navigationIcon = {
                         Box(modifier = Modifier.padding(start = 8.dp)) {
-                            ExpressiveIconButton(
-                                icon = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = "Back",
-                                onClick = { showWebView = false }
-                            )
+                            FilledTonalIconButton(
+                                onClick = { showWebView = false },
+                                shapes = IconButtonDefaults.shapes()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                    contentDescription = "Back"
+                                )
+                            }
                         }
                     }
                 )
@@ -157,7 +170,7 @@ fun LoginScreen(
                     ) {
                         Surface(
                             modifier = Modifier.size(84.dp),
-                            shape = RoundedCornerShape(24.dp),
+                            shape = MaterialShapes.Cookie9Sided.toShape(),
                             color = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         ) {
@@ -191,17 +204,30 @@ fun LoginScreen(
 
                         Spacer(modifier = Modifier.height(28.dp))
 
-                        ExpressiveButton(
-                            text = "Sign In",
-                            icon = Icons.AutoMirrored.Rounded.Login,
+                        Button(
                             onClick = { showWebView = true },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                            shapes = ButtonDefaults.shapes(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.Login,
+                                contentDescription = null,
+                                modifier = Modifier.size(ButtonDefaults.IconSize)
+                            )
+                            Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
+                            Text(
+                                text = "Sign In",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(12.dp))
 
                         TextButton(
-                            onClick = { showSkipDialog = true }
+                            onClick = { showSkipDialog = true },
+                            shapes = ButtonDefaults.shapes()
                         ) {
                             Text(
                                 text = "Skip for now",
@@ -218,7 +244,7 @@ fun LoginScreen(
                     .padding(innerPadding)
             ) {
                 if (isLoading) {
-                    WavyLinearProgressIndicator(
+                    ExpressiveWavyProgress(
                         progress = loadingProgress,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -298,15 +324,27 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    ExpressiveButton(
-                        text = "Continue",
-                        icon = Icons.Rounded.CheckCircle,
+                    Button(
                         onClick = {
                             CookieManager.getInstance().flush()
                             onLoggedIn()
                         },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(ButtonDefaults.IconSize)
+                        )
+                        Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
+                        Text(
+                            text = "Continue",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
                 }
             }
         }
