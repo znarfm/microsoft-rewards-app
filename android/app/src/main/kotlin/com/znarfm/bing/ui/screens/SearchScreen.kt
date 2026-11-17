@@ -19,17 +19,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.isImeVisible
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -54,21 +50,19 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -96,8 +90,7 @@ import kotlin.math.roundToInt
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3ExpressiveApi::class,
-    ExperimentalLayoutApi::class
+    ExperimentalMaterial3ExpressiveApi::class
 )
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -108,7 +101,6 @@ fun SearchScreen(
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val isImeVisible = WindowInsets.isImeVisible
     var canGoBackInWebView by remember { mutableStateOf(false) }
     var backProgress by remember { mutableFloatStateOf(0f) }
 
@@ -348,10 +340,7 @@ fun SearchScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             snackbarHost = {
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier.padding(bottom = 84.dp)
-                )
+                SnackbarHost(hostState = snackbarHostState)
             },
             topBar = {
                 TopAppBar(
@@ -384,6 +373,34 @@ fun SearchScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                     }
                 )
+            },
+            bottomBar = {
+                val searchSelected = uiState.selectedTab == 0
+                val configSelected = uiState.selectedTab == 1
+                ShortNavigationBar {
+                    ShortNavigationBarItem(
+                        selected = searchSelected,
+                        onClick = { if (!searchSelected) viewModel.selectTab(0) },
+                        icon = {
+                            Icon(
+                                imageVector = if (searchSelected) Icons.Rounded.Search else Icons.Outlined.Search,
+                                contentDescription = null
+                            )
+                        },
+                        label = { Text("Search") }
+                    )
+                    ShortNavigationBarItem(
+                        selected = configSelected,
+                        onClick = { if (!configSelected) viewModel.selectTab(1) },
+                        icon = {
+                            Icon(
+                                imageVector = if (configSelected) Icons.Rounded.Settings else Icons.Outlined.Settings,
+                                contentDescription = null
+                            )
+                        },
+                        label = { Text("Config") }
+                    )
+                }
             }
         ) { innerPadding ->
             Box(
@@ -414,52 +431,6 @@ fun SearchScreen(
                             viewModel = viewModel,
                             onExitApp = onExitApp
                         )
-                    }
-                }
-
-                // Floating Toolbar at bottom center (hidden when keyboard is open)
-                AnimatedVisibility(
-                    visible = !isImeVisible,
-                    enter = fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
-                    exit = fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(bottom = 12.dp)
-                ) {
-                    HorizontalFloatingToolbar(
-                        expanded = true,
-                        colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors()
-                    ) {
-                        val searchSelected = uiState.selectedTab == 0
-                        val configSelected = uiState.selectedTab == 1
-                        ToggleButton(
-                            checked = searchSelected,
-                            onCheckedChange = { if (!searchSelected) viewModel.selectTab(0) },
-                            shapes = ToggleButtonDefaults.shapesFor(ToggleButtonDefaults.size)
-                        ) {
-                            Icon(
-                                imageVector = if (searchSelected) Icons.Rounded.Search else Icons.Outlined.Search,
-                                contentDescription = null,
-                                modifier = Modifier.size(ToggleButtonDefaults.IconSize)
-                            )
-                            Spacer(modifier = Modifier.width(ToggleButtonDefaults.IconSpacing))
-                            Text("Search")
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        ToggleButton(
-                            checked = configSelected,
-                            onCheckedChange = { if (!configSelected) viewModel.selectTab(1) },
-                            shapes = ToggleButtonDefaults.shapesFor(ToggleButtonDefaults.size)
-                        ) {
-                            Icon(
-                                imageVector = if (configSelected) Icons.Rounded.Settings else Icons.Outlined.Settings,
-                                contentDescription = null,
-                                modifier = Modifier.size(ToggleButtonDefaults.IconSize)
-                            )
-                            Spacer(modifier = Modifier.width(ToggleButtonDefaults.IconSpacing))
-                            Text("Config")
-                        }
                     }
                 }
             }
@@ -542,7 +513,7 @@ private fun StreakBadge(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SearchTabContent(
     uiState: AppUiState,
@@ -551,8 +522,7 @@ private fun SearchTabContent(
     backProgress: Float = 0f
 ) {
     val isSearching = uiState.searchState is SearchState.InProgress
-    val isImeVisible = WindowInsets.isImeVisible
-    val bottomCardPadding = if (isImeVisible) 10.dp else 86.dp
+    val bottomCardPadding = 12.dp
 
     Column(
         modifier = Modifier
