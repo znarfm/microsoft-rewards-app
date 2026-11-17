@@ -246,6 +246,7 @@ fun LoginScreen(
                 if (isLoading) {
                     ExpressiveWavyProgress(
                         progress = loadingProgress,
+                        indeterminate = loadingProgress <= 0.05f,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 4.dp)

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.ScreenLockPortrait
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material.icons.rounded.Update
 import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.AlertDialog
@@ -87,6 +89,17 @@ import com.znarfm.bing.ui.SearchState
 import com.znarfm.bing.ui.SearchViewModel
 import com.znarfm.bing.ui.components.ExpressiveSwitch
 import com.znarfm.bing.ui.theme.AppThemeMode
+
+private val ThemeOptionRows = listOf(
+    listOf(
+        AppThemeMode.SYSTEM to Icons.Rounded.BrightnessAuto,
+        AppThemeMode.LIGHT to Icons.Rounded.LightMode
+    ),
+    listOf(
+        AppThemeMode.DARK to Icons.Rounded.DarkMode,
+        AppThemeMode.AMOLED to Icons.Rounded.Contrast
+    )
+)
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -207,18 +220,13 @@ fun ConfigScreen(
                 modifier = Modifier.padding(bottom = 10.dp)
             )
 
-            val themeOptions = listOf(
-                AppThemeMode.SYSTEM to Icons.Rounded.BrightnessAuto,
-                AppThemeMode.LIGHT to Icons.Rounded.LightMode,
-                AppThemeMode.DARK to Icons.Rounded.DarkMode,
-                AppThemeMode.AMOLED to Icons.Rounded.Contrast
-            )
-
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectableGroup(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                themeOptions.chunked(2).forEach { rowItems ->
+                ThemeOptionRows.forEach { rowItems ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
@@ -536,7 +544,7 @@ fun ConfigScreen(
                 }
 
                 ConfigSwitchRow(
-                    icon = Icons.Rounded.SystemUpdate,
+                    icon = Icons.Rounded.Update,
                     title = "Auto-check for updates",
                     subtitle = "Check GitHub Releases automatically on app launch",
                     checked = uiState.autoCheckUpdates,

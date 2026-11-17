@@ -22,7 +22,7 @@ A pure Native Android app built with **Kotlin** and **Jetpack Compose (Material 
 ## Features
 
 - **Automated Bing searches** - configurable count (`1..50`), preset count chips (`10, 20, 30, 50`), and randomized delay between queries with live countdown and cancel support
-- **Material 3 Expressive UI** - spatial spring physics (`dampingRatio = 0.6f, stiffness = 500f`), dual shape-morphing buttons & chips (pill $\leftrightarrow$ squircle), animated sinusoidal `WavyLinearProgressIndicator`, and floating pill bottom navigation dock
+- **Material 3 Expressive UI** - `MaterialExpressiveTheme` (`MotionScheme.expressive()`), connected `ToggleButton` groups, `SegmentedListItem` cards, squiggly `LinearWavyProgressIndicator` & `CircularWavyProgressIndicator`, and `ShortNavigationBar`
 - **Vector Adaptive & Material You Monochrome Icon** - vector adaptive launcher icon (`drawable/ic_launcher_foreground.xml`, `ic_launcher_background.xml`, `roundIcon`) with themed Material You monochrome dynamic tinting on Android 13+ (`drawable/ic_launcher_monochrome.xml`)
 - **In-App Self-Updater** - checks GitHub Releases for new updates (`utils/UpdateChecker.kt`), configurable auto-check on launch and manual check in ConfigScreen, ABI-aware APK download, and seamless install via `FileProvider`
 - **Android 16 Live Updates (Promoted Ongoing Notifications)** - `POST_PROMOTED_NOTIFICATIONS`, `Notification.ProgressStyle`, status-bar chip `shortCriticalText` (`x/y`), `Stop` action button, and swipe-dismiss guard when running in background
@@ -62,7 +62,7 @@ android/app/src/main/kotlin/com/znarfm/bing/
 ├── ui/
 │   ├── SearchViewModel.kt           # StateFlow state, search coroutine loop, validation, haptics
 │   ├── components/
-│   │   └── ExpressiveComponents.kt  # ExpressiveButton, ExpressiveChoiceChip, WavyLinearProgressIndicator, FloatingNavBar
+│   │   └── ExpressiveComponents.kt  # ExpressiveSwitch & ExpressiveWavyProgress (LinearWavyProgressIndicator)
 │   ├── screens/
 │   │   ├── AmoledOverlay.kt         # Pure-black hold-to-wake (1.5s) & double-back overlay
 │   │   ├── ConfigScreen.kt          # Theme selector, AMOLED toggle, streaks, data saver, reminders, update check
