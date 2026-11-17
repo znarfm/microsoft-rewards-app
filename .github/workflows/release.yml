@@ -47,7 +47,7 @@ jobs:
 
       - name: Run Unit Tests & Build Release APKs
         working-directory: android
-        run: gradle testReleaseUnitTest assembleRelease
+        run: gradle testDebugUnitTest assembleRelease
 
       - name: Build Release App Bundle (AAB)
         working-directory: android
