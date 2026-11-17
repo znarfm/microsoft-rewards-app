@@ -429,7 +429,6 @@ fun SearchScreen(
                 ) {
                     HorizontalFloatingToolbar(
                         expanded = true,
-                        floatingActionButton = {},
                         colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors()
                     ) {
                         val searchSelected = uiState.selectedTab == 0
