@@ -128,7 +128,7 @@ fun AmoledOverlay(
             val backdropSize = 132.dp
             val ringSize = 104.dp
             val halfPx = with(density) { (backdropSize / 2).toPx() }
-            val burstShape = remember { MaterialShapes.SoftBurst.toShape() }
+            val burstShape = MaterialShapes.SoftBurst.toShape()
 
             Box(
                 modifier = Modifier

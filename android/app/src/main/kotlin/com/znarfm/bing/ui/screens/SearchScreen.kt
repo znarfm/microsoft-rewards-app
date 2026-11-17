@@ -437,7 +437,7 @@ fun SearchScreen(
                         ToggleButton(
                             checked = searchSelected,
                             onCheckedChange = { if (!searchSelected) viewModel.selectTab(0) },
-                            shapes = ToggleButtonDefaults.shapes()
+                            shapes = ToggleButtonDefaults.shapesFor(ToggleButtonDefaults.size)
                         ) {
                             Icon(
                                 imageVector = if (searchSelected) Icons.Rounded.Search else Icons.Outlined.Search,
@@ -451,7 +451,7 @@ fun SearchScreen(
                         ToggleButton(
                             checked = configSelected,
                             onCheckedChange = { if (!configSelected) viewModel.selectTab(1) },
-                            shapes = ToggleButtonDefaults.shapes()
+                            shapes = ToggleButtonDefaults.shapesFor(ToggleButtonDefaults.size)
                         ) {
                             Icon(
                                 imageVector = if (configSelected) Icons.Rounded.Settings else Icons.Outlined.Settings,
