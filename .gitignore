@@ -8,6 +8,7 @@
 
 # Gradle files
 .gradle/
+.kotlin/
 build/
 **/build/
 
@@ -29,12 +30,6 @@ captures/
 key.properties
 *.jks
 *.keystore
-
-# Fastlane
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots
-fastlane/test_output
 
 # OS generated files
 .DS_Store

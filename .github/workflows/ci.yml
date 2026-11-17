@@ -5,13 +5,23 @@ on:
     branches:
       - 'main'
     paths:
-      - 'android/**'
+      - 'app/**'
+      - 'gradle/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - 'gradlew'
       - '.github/workflows/ci.yml'
   pull_request:
     branches:
       - 'main'
     paths:
-      - 'android/**'
+      - 'app/**'
+      - 'gradle/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - 'gradlew'
       - '.github/workflows/ci.yml'
 
 permissions:
@@ -40,9 +50,6 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v4.3.1
-        with:
-          gradle-version: '9.3.1'
 
       - name: Run Unit Tests
-        working-directory: android
-        run: gradle testDebugUnitTest --no-daemon
+        run: ./gradlew testDebugUnitTest --no-daemon

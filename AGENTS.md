@@ -10,7 +10,7 @@ Respond like smart caveman. Cut filler, keep technical substance.
 Native Android app (Kotlin + Compose M3 Expressive), `Bing Rewards Automator` (`com.znarfm.bing`). Embedded MS `WebView` login + configurable Bing searches (count + delay) for Rewards points. In-place upgrade from Flutter — keep compat (see Persistence).
 
 ## Architecture & Data Flow
-Root: `android/app/src/main/kotlin/com/znarfm/bing/`. Single Activity, single ViewModel, no DI.
+Root: `app/src/main/kotlin/com/znarfm/bing/`. Single Activity, single ViewModel, no DI.
 - `MainActivity` — Compose host (`LoginScreen` if `!isLoggedIn` else `SearchScreen`); handles start-search shortcut, keep-screen-on, immersive AMOLED, `onStart/onStop` → `viewModel.onAppForegroundChanged`. Manifest `configChanges` keeps Activity + `WebView` alive across rotation/uiMode.
 - `ui/screens/LoginScreen` — MS login `WebView`; user taps **Continue** → `setLoggedIn(true)` (no auto URL detection; MS redirects flicker).
 - `ui/screens/SearchScreen` — controls, progress card, persistent Bing `WebView` (`remember`). Collects `viewModel.webViewUrlCommands` → `loadUrl`. `WebViewClient` reports main-frame results via `viewModel.onPageResult(url, success, error)` (`onReceivedError`, `onReceivedHttpError >= 400`, `onPageFinished`).
@@ -23,19 +23,20 @@ Root: `android/app/src/main/kotlin/com/znarfm/bing/`. Single Activity, single Vi
   Cancel = coroutine cancel (`cancelSearch`, notification Stop action).
 - `data/WordGenerator` — template natural queries (`randomSentence`, `distinctQueries`); no brands/people/NSFW.
 - `data/PreferencesRepository` — prefs + pure streak math (`computeStreakAfterCompletion`).
-- `notifications/` — `NotificationHelper` (Live Update progress, daily reminder), `SearchForegroundService` (`dataSync` FGS + partial wakelock), `NotificationReceivers.kt` (`DailyReminderWorker` WorkManager, receivers).
+- `notifications/` — `NotificationHelper` (Live Update progress, daily reminder), `SearchForegroundService` (`dataSync` FGS + partial wakelock), `DailyReminderWorker.kt` (`DailyReminderWorker` WorkManager).
+- `utils/UpdateChecker` — GitHub Releases self-updater (ABI-aware APK selection + `FileProvider` install).
 
 ## Persistence
-`SharedPreferences` file `FlutterSharedPreferences`, keys `flutter.*`, ints `Long`-encoded — ⚠️ NEVER rename (upgrade compat, asserted in tests). Defaults: count `"22"`, delay `"15"`, daily reminder off @19:00, keep screen on, login popup on, AMOLED overlay off, data saver on, haptics on, theme `system`.
+`SharedPreferences` file `FlutterSharedPreferences`, keys `flutter.*`, ints `Long`-encoded — ⚠️ NEVER rename (upgrade compat, asserted in tests). Defaults: count `"22"`, delay `"15"`, daily reminder off @19:00, keep screen on, login popup on, AMOLED overlay off, data saver on, haptics on, auto-check updates on, theme `system`.
 
 ## Commands
-No `gradlew` script committed (wrapper props only). Run system `gradle` from `android/`:
+`./gradlew` is committed at repo root (`local.properties` at root points `sdk.dir` to `~/.local/share/mise/installs/android-sdk/<ver>`). Run `mise run test` or `./gradlew` from root:
 ```bash
-gradle testReleaseUnitTest   # unit tests (CI gate)
-gradle assembleRelease       # APKs
-gradle bundleRelease         # AAB
+./gradlew testDebugUnitTest  # unit tests (AGP 9 / CI gate; or `mise run test`)
+./gradlew assembleRelease    # APKs
+./gradlew bundleRelease      # AAB
 ```
-CI: `.github/workflows/ci.yml` (tests on `main`/`feat/**` + PRs), `release.yml` (tag `v*` → build/release, generates keystore).
+CI: `.github/workflows/ci.yml` (tests on `main` + PRs), `release.yml` (tag `v*` → build/release, generates keystore).
 
 ## Conventions
 - `minSdk 24`, JVM 17 — avoid API > 24 without version check (`Calendar`, not `java.time`).
@@ -43,9 +44,13 @@ CI: `.github/workflows/ci.yml` (tests on `main`/`feat/**` + PRs), `release.yml` 
 - Pure logic in `companion object`/`object` funcs for JVM tests (`hasBingAuthCookie`, `computeWaitMs`, validators, streak math).
 - Keep 1-arg `SearchViewModel(Application)` ctor (reflection factory; tested) + ProGuard rules.
 - Serial search loop by design (one shared `WebView`).
+- M3 Expressive UI (`material3:1.5.0-rc01`):
+  - Wavy progress (`LinearWavyProgressIndicator` / `CircularWavyProgressIndicator`): force `amplitude = { 1f }` (`wavelength = 20.dp`, `animateFloatAsState`) so waves do not flatten at `<10%`/`>95%`, and use `indeterminate = true` at initial `0%` load.
+  - `SegmentedListItem`: place a `Row(verticalAlignment = Alignment.CenterVertically)` inside `content` (`ConfigSegmentedItem`) with symmetric `contentPadding` instead of `leadingContent`/`supportingContent` slots (which top-align on 3-line wrap).
+  - Connected `ToggleButton` groups: use fixed rows (e.g. 2x2 `Column(Modifier.selectableGroup())` + `Row` with `connectedLeadingButtonShapes()` / `connectedTrailingButtonShapes()` and `Modifier.weight(1f)`), not unconstrained `FlowRow`.
 
 ## Testing
-JUnit4 only (`android/app/src/test/.../RewardsUnitTest.kt`). No Robolectric/mocks — test pure functions. Add unit test per new pure function.
+JUnit4 only (`app/src/test/.../RewardsUnitTest.kt`). No Robolectric/mocks — test pure functions. Add unit test per new pure function.
 
 ## Gotchas
 - ⚠️ `app/build.gradle.kts` hardcodes release keystore passwords — NEVER commit new secrets; do not touch keystore config unless asked.

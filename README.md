@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Bing Rewards Automator logo" height="96" />
+<img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Bing Rewards Automator logo" height="96" />
 
 # Bing Rewards Automator
 
@@ -30,7 +30,7 @@ A pure Native Android app built with **Kotlin** and **Jetpack Compose (Material 
 - **Pure-black AMOLED theme & simulated screen off** - `AMOLED` mode blacks out all surfaces (`#000000`) and optionally covers the display in sticky immersive black during active searches (1.5s hold-to-wake ring or double-back to wake)
 - **Daily streak tracking & haptics** - tracks current and best daily completion streaks with celebratory completion haptics
 - **Data Saver & Keep Screen On** - blocks WebView network images/media for lighter searches and keeps screen awake during active runs
-- **Daily reminders** - `WorkManager` & `AlarmManager` smart daily notifications surviving device reboots (`BOOT_COMPLETED` / `MY_PACKAGE_REPLACED`)
+- **Daily reminders** - `WorkManager` smart daily notifications that skip when searches are already completed today
 
 ## Upgrade Compatibility
 
@@ -41,8 +41,7 @@ Upgrading in-place from the previous Flutter release (`v2.0.0` and earlier) work
 ## Build
 
 ```bash
-cd android
-./gradlew testReleaseUnitTest   # Run JUnit unit tests
+./gradlew testDebugUnitTest     # Run JUnit unit tests
 ./gradlew assembleRelease       # Build Universal + ABI-split Release APKs
 ./gradlew bundleRelease         # Build Release App Bundle (AAB)
 ```
@@ -50,16 +49,17 @@ cd android
 ## Project Structure
 
 ```
-android/app/src/main/kotlin/com/znarfm/bing/
+app/src/main/kotlin/com/znarfm/bing/
 ├── MainActivity.kt                  # Edge-to-edge Compose host, shortcuts, system bars, notification receiver
 ├── data/
 │   ├── PreferencesRepository.kt     # FlutterSharedPreferences-compatible storage + streak calculation
 │   └── WordGenerator.kt             # Template-based natural search queries (distinct per run)
 ├── notifications/
-│   ├── NotificationHelper.kt        # Android 16 Live Updates (ProgressStyle + chip) & AlarmManager scheduling
-│   ├── NotificationReceivers.kt     # DailyReminderWorker & BootReceiver
+│   ├── DailyReminderWorker.kt       # WorkManager daily reminder worker
+│   ├── NotificationHelper.kt        # Android 16 Live Updates (ProgressStyle + chip) & reminder scheduling
 │   └── SearchForegroundService.kt   # DataSync foreground service & partial wakelock during active search runs
 ├── ui/
+│   ├── AppUiState.kt                # SearchState, AppUiState, and PageLoadResult models
 │   ├── SearchViewModel.kt           # StateFlow state, search coroutine loop, validation, haptics
 │   ├── components/
 │   │   └── ExpressiveComponents.kt  # ExpressiveSwitch & ExpressiveWavyProgress (LinearWavyProgressIndicator)

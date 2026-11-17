@@ -32,43 +32,39 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v4.3.1
-        with:
-          gradle-version: '9.3.1'
 
       - name: Setup Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+            echo "$KEYSTORE_BASE64" | base64 -d > app/upload-keystore.jks
           else
-            keytool -genkey -v -keystore android/app/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass microsoft -keypass microsoft -dname "CN=Reward Automator, OU=App, O=Org, L=City, S=State, C=US"
+            keytool -genkey -v -keystore app/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass microsoft -keypass microsoft -dname "CN=Reward Automator, OU=App, O=Org, L=City, S=State, C=US"
           fi
 
       - name: Run Unit Tests & Build Release APKs
-        working-directory: android
-        run: gradle testDebugUnitTest assembleRelease
+        run: ./gradlew testDebugUnitTest assembleRelease
 
       - name: Build Release App Bundle (AAB)
-        working-directory: android
-        run: gradle bundleRelease
+        run: ./gradlew bundleRelease
 
       - name: Prepare Release Binaries
         run: |
-          cp android/app/build/outputs/apk/release/app-universal-release.apk android/app/build/outputs/apk/release/microsoft-rewards-automator-universal.apk
-          ls -lh android/app/build/outputs/apk/release/
-          ls -lh android/app/build/outputs/bundle/release/
+          cp app/build/outputs/apk/release/app-universal-release.apk app/build/outputs/apk/release/microsoft-rewards-automator-universal.apk
+          ls -lh app/build/outputs/apk/release/
+          ls -lh app/build/outputs/bundle/release/
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: microsoft-rewards-native-apks
           path: |
-            android/app/build/outputs/apk/release/microsoft-rewards-automator-universal.apk
-            android/app/build/outputs/apk/release/app-arm64-v8a-release.apk
-            android/app/build/outputs/apk/release/app-armeabi-v7a-release.apk
-            android/app/build/outputs/apk/release/app-x86_64-release.apk
-            android/app/build/outputs/bundle/release/app-release.aab
+            app/build/outputs/apk/release/microsoft-rewards-automator-universal.apk
+            app/build/outputs/apk/release/app-arm64-v8a-release.apk
+            app/build/outputs/apk/release/app-armeabi-v7a-release.apk
+            app/build/outputs/apk/release/app-x86_64-release.apk
+            app/build/outputs/bundle/release/app-release.aab
 
       - name: Create Release & Upload Binaries
         if: github.ref_type == 'tag'
@@ -76,9 +72,9 @@ jobs:
         with:
           prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
-            android/app/build/outputs/apk/release/microsoft-rewards-automator-universal.apk
-            android/app/build/outputs/apk/release/app-arm64-v8a-release.apk
-            android/app/build/outputs/apk/release/app-armeabi-v7a-release.apk
-            android/app/build/outputs/apk/release/app-x86_64-release.apk
-            android/app/build/outputs/bundle/release/app-release.aab
+            app/build/outputs/apk/release/microsoft-rewards-automator-universal.apk
+            app/build/outputs/apk/release/app-arm64-v8a-release.apk
+            app/build/outputs/apk/release/app-armeabi-v7a-release.apk
+            app/build/outputs/apk/release/app-x86_64-release.apk
+            app/build/outputs/bundle/release/app-release.aab
           generate_release_notes: true

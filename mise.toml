@@ -4,15 +4,12 @@ gradle = "9.3.1"
 
 [tasks.test]
 description = "Run unit tests"
-dir = "android"
-run = "gradle testDebugUnitTest"
+run = "./gradlew testDebugUnitTest"
 
 [tasks.build]
 description = "Build release APKs"
-dir = "android"
-run = "gradle assembleRelease"
+run = "./gradlew assembleRelease"
 
 [tasks.bundle]
 description = "Build release bundle (AAB)"
-dir = "android"
-run = "gradle bundleRelease"
+run = "./gradlew bundleRelease"
