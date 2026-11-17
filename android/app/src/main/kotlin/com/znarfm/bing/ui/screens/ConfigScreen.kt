@@ -15,8 +15,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -46,6 +45,7 @@ import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.ScreenLockPortrait
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material.icons.rounded.Update
 import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.AlertDialog
@@ -90,10 +90,20 @@ import com.znarfm.bing.ui.SearchViewModel
 import com.znarfm.bing.ui.components.ExpressiveSwitch
 import com.znarfm.bing.ui.theme.AppThemeMode
 
+private val ThemeOptionRows = listOf(
+    listOf(
+        AppThemeMode.SYSTEM to Icons.Rounded.BrightnessAuto,
+        AppThemeMode.LIGHT to Icons.Rounded.LightMode
+    ),
+    listOf(
+        AppThemeMode.DARK to Icons.Rounded.DarkMode,
+        AppThemeMode.AMOLED to Icons.Rounded.Contrast
+    )
+)
+
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3ExpressiveApi::class,
-    ExperimentalLayoutApi::class
+    ExperimentalMaterial3ExpressiveApi::class
 )
 @Composable
 fun ConfigScreen(
@@ -210,40 +220,43 @@ fun ConfigScreen(
                 modifier = Modifier.padding(bottom = 10.dp)
             )
 
-            val themeOptions = listOf(
-                AppThemeMode.SYSTEM to Icons.Rounded.BrightnessAuto,
-                AppThemeMode.LIGHT to Icons.Rounded.LightMode,
-                AppThemeMode.DARK to Icons.Rounded.DarkMode,
-                AppThemeMode.AMOLED to Icons.Rounded.Contrast
-            )
-
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectableGroup(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                themeOptions.forEachIndexed { idx, (mode, icon) ->
-                    val shapes = when (idx) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        themeOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    }
-                    ToggleButton(
-                        checked = uiState.themeMode == mode,
-                        onCheckedChange = { viewModel.setThemeMode(mode) },
-                        shapes = shapes,
-                        modifier = Modifier.semantics { role = Role.RadioButton }
+                ThemeOptionRows.forEach { rowItems ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
                     ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(ToggleButtonDefaults.IconSize)
-                        )
-                        Spacer(modifier = Modifier.size(ToggleButtonDefaults.IconSpacing))
-                        Text(
-                            text = mode.label,
-                            maxLines = 1
-                        )
+                        rowItems.forEachIndexed { idx, (mode, icon) ->
+                            val shapes = if (idx == 0) {
+                                ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            } else {
+                                ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            }
+                            ToggleButton(
+                                checked = uiState.themeMode == mode,
+                                onCheckedChange = { viewModel.setThemeMode(mode) },
+                                shapes = shapes,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .semantics { role = Role.RadioButton }
+                            ) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ToggleButtonDefaults.IconSize)
+                                )
+                                Spacer(modifier = Modifier.size(ToggleButtonDefaults.IconSpacing))
+                                Text(
+                                    text = mode.label,
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -482,7 +495,7 @@ fun ConfigScreen(
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/znarfm"))
                         context.startActivity(intent)
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 4),
+                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 5),
                     leadingContent = {
                         Icon(
                             imageVector = Icons.Rounded.Code,
@@ -507,7 +520,7 @@ fun ConfigScreen(
 
                 SegmentedListItem(
                     onClick = {},
-                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = 4),
+                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = 5),
                     leadingContent = {
                         Icon(
                             imageVector = Icons.Rounded.Info,
@@ -530,9 +543,19 @@ fun ConfigScreen(
                     )
                 }
 
+                ConfigSwitchRow(
+                    icon = Icons.Rounded.Update,
+                    title = "Auto-check for updates",
+                    subtitle = "Check GitHub Releases automatically on app launch",
+                    checked = uiState.autoCheckUpdates,
+                    onCheckedChange = { viewModel.setAutoCheckUpdates(it) },
+                    index = 2,
+                    count = 5
+                )
+
                 SegmentedListItem(
                     onClick = { viewModel.checkForUpdates(isManual = true) },
-                    shapes = ListItemDefaults.segmentedShapes(index = 2, count = 4),
+                    shapes = ListItemDefaults.segmentedShapes(index = 3, count = 5),
                     leadingContent = {
                         Icon(
                             imageVector = Icons.Rounded.SystemUpdate,
@@ -572,7 +595,7 @@ fun ConfigScreen(
                             onExitApp()
                         }
                     },
-                    shapes = ListItemDefaults.segmentedShapes(index = 3, count = 4),
+                    shapes = ListItemDefaults.segmentedShapes(index = 4, count = 5),
                     leadingContent = {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ExitToApp,

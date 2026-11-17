@@ -6,7 +6,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -21,6 +20,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.LockOpen
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
@@ -38,8 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -159,20 +157,13 @@ fun AmoledOverlay(
                             shape = burstShape
                         )
                 )
-                Canvas(modifier = Modifier.size(ringSize)) {
-                    val stroke = 5.dp.toPx()
-                    drawCircle(
-                        color = Color.White.copy(alpha = 0.16f),
-                        style = Stroke(width = stroke)
-                    )
-                    drawArc(
-                        color = Color.White.copy(alpha = 0.85f),
-                        startAngle = -90f,
-                        sweepAngle = 360f * progress,
-                        useCenter = false,
-                        style = Stroke(width = stroke, cap = StrokeCap.Round)
-                    )
-                }
+                CircularWavyProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.size(ringSize),
+                    color = Color.White.copy(alpha = 0.85f),
+                    trackColor = Color.White.copy(alpha = 0.16f),
+                    amplitude = { 1f }
+                )
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         imageVector = Icons.Rounded.LockOpen,

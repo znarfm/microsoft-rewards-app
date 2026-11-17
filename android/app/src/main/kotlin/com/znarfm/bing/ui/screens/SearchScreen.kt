@@ -267,18 +267,11 @@ fun SearchScreen(
                     )
                     if (uiState.isDownloadingUpdate) {
                         Spacer(modifier = Modifier.height(16.dp))
-                        if (uiState.updateDownloadProgress <= 0f) {
-                            ExpressiveWavyProgress(
-                                progress = 0f,
-                                indeterminate = true,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        } else {
-                            ExpressiveWavyProgress(
-                                progress = uiState.updateDownloadProgress,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                        ExpressiveWavyProgress(
+                            progress = uiState.updateDownloadProgress,
+                            indeterminate = uiState.updateDownloadProgress <= 0f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Downloading ${release.assetName}… ${(uiState.updateDownloadProgress * 100).toInt()}%",
@@ -681,6 +674,7 @@ private fun SearchTabContent(
 
                                 ExpressiveWavyProgress(
                                     progress = frac,
+                                    indeterminate = progressState.current == 0,
                                     modifier = Modifier.fillMaxWidth()
                                 )
 

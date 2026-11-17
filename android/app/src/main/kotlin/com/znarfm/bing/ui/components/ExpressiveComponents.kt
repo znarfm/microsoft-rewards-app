@@ -1,5 +1,6 @@
 package com.znarfm.bing.ui.components
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
@@ -8,11 +9,14 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun ExpressiveSwitch(
@@ -45,19 +49,30 @@ fun ExpressiveWavyProgress(
     color: Color = MaterialTheme.colorScheme.primary,
     trackColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest
 ) {
+    val target = if (indeterminate) 0f else progress.coerceIn(0f, 1f)
+    val animatedProgress by animateFloatAsState(
+        targetValue = target,
+        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
+        label = "wavyProgress"
+    )
     if (indeterminate) {
         LinearWavyProgressIndicator(
             modifier = modifier,
             color = color,
-            trackColor = trackColor
+            trackColor = trackColor,
+            amplitude = 1f,
+            wavelength = 20.dp,
+            waveSpeed = 20.dp
         )
     } else {
-        val coerced = progress.coerceIn(0f, 1f)
         LinearWavyProgressIndicator(
-            progress = { coerced },
+            progress = { animatedProgress },
             modifier = modifier,
             color = color,
-            trackColor = trackColor
+            trackColor = trackColor,
+            amplitude = { 1f },
+            wavelength = 20.dp,
+            waveSpeed = 20.dp
         )
     }
 }

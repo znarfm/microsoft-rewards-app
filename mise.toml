@@ -1,6 +1,6 @@
 [tools]
 java = "17"
-gradle = "8.14.3"
+gradle = "9.3.1"
 
 [tasks.test]
 description = "Run unit tests"

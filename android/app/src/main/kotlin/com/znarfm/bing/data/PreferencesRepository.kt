@@ -100,6 +100,10 @@ class PreferencesRepository(context: Context) {
         get() = getBooleanCompat(KEY_HAPTIC_FEEDBACK, DEFAULT_HAPTIC_FEEDBACK)
         set(value) = prefs.edit().putBoolean(KEY_HAPTIC_FEEDBACK, value).apply()
 
+    var autoCheckUpdates: Boolean
+        get() = getBooleanCompat(KEY_AUTO_CHECK_UPDATES, DEFAULT_AUTO_CHECK_UPDATES)
+        set(value) = prefs.edit().putBoolean(KEY_AUTO_CHECK_UPDATES, value).apply()
+
     var completionStreak: Int
         get() = getIntCompat(KEY_COMPLETION_STREAK, 0)
         set(value) = putIntCompat(KEY_COMPLETION_STREAK, value)
@@ -171,6 +175,7 @@ class PreferencesRepository(context: Context) {
         const val KEY_LAST_COMPLETED_DATE = "flutter.last_completed_date"
         const val KEY_HAPTIC_FEEDBACK = "flutter.haptic_feedback"
         const val KEY_SEARCH_CANCELLED_FROM_NOTIFICATION = "flutter.search_cancelled_from_notification"
+        const val KEY_AUTO_CHECK_UPDATES = "flutter.auto_check_updates"
 
         const val DEFAULT_SEARCH_COUNT = "22"
         const val DEFAULT_SEARCH_DELAY = "15"
@@ -182,6 +187,7 @@ class PreferencesRepository(context: Context) {
         const val DEFAULT_AMOLED_SCREEN_OFF = false
         const val DEFAULT_DATA_SAVER = true
         const val DEFAULT_HAPTIC_FEEDBACK = true
+        const val DEFAULT_AUTO_CHECK_UPDATES = true
 
         fun formatDate(year: Int, monthOneBased: Int, day: Int): String {
             return "%04d-%02d-%02d".format(year, monthOneBased, day)

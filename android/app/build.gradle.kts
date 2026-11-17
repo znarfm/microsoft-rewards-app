@@ -17,8 +17,8 @@ android {
         applicationId = "com.znarfm.bing"
         minSdk = 24
         targetSdk = 36
-        versionCode = 35
-        versionName = "2.5.3"
+        versionCode = 36
+        versionName = "2.5.4"
     }
 
     compileOptions {

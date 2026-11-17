@@ -71,6 +71,7 @@ data class AppUiState(
     val statusBannerMessage: String? = null,
     val selectedTab: Int = 0,
     val searchState: SearchState = SearchState.Idle,
+    val autoCheckUpdates: Boolean = true,
     val availableUpdate: com.znarfm.bing.utils.UpdateChecker.ReleaseInfo? = null,
     val isCheckingUpdate: Boolean = false,
     val isDownloadingUpdate: Boolean = false,
@@ -112,7 +113,9 @@ class SearchViewModel(
     init {
         checkStreakStatus()
         prefs.lastOpenedDate = PreferencesRepository.todayString()
-        checkForUpdates(isManual = false)
+        if (prefs.autoCheckUpdates) {
+            checkForUpdates(isManual = false)
+        }
     }
 
     private fun loadInitialState(): AppUiState {
@@ -131,7 +134,8 @@ class SearchViewModel(
             searchDelayText = prefs.searchDelay,
             currentStreak = prefs.completionStreak,
             bestStreak = prefs.bestStreak,
-            isCompletedToday = prefs.isCompletedToday()
+            isCompletedToday = prefs.isCompletedToday(),
+            autoCheckUpdates = prefs.autoCheckUpdates
         )
     }
 
@@ -208,6 +212,11 @@ class SearchViewModel(
     fun setShowLoginReminderPopup(enabled: Boolean) {
         prefs.showLoginReminderPopup = enabled
         _uiState.update { it.copy(showLoginReminderPopup = enabled) }
+    }
+
+    fun setAutoCheckUpdates(enabled: Boolean) {
+        prefs.autoCheckUpdates = enabled
+        _uiState.update { it.copy(autoCheckUpdates = enabled) }
     }
 
     fun setDailyReminder(enabled: Boolean) {
