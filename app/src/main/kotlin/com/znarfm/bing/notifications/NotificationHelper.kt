@@ -126,7 +126,7 @@ object NotificationHelper {
         ).build()
 
         builder
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Bing Search Automation")
             .setContentText(bodyText)
             .setSubText("$percent%")
@@ -262,7 +262,7 @@ object NotificationHelper {
         }
 
         val notification = builder
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)
