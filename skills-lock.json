@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "skills": {
+    "material-3-expressive": {
+      "source": "albermonte/android-skills",
+      "commit": "56725170c68f09a16d7ec9f3030f673b6d310e88",
+      "sourceType": "github",
+      "skillPath": "skills/material-3-expressive/SKILL.md",
+      "computedHash": "7fd2883720354412f4658b175c016a28b0ced970dc7a68f189687d3f1ddd2dfc"
+    },
+    "security-audit": {
+      "source": "cloudflare/security-audit-skill",
+      "commit": "c1c8a8c1471069fb0e188eeaff69b8e8db6564a8",
+      "sourceType": "github",
+      "skillPath": "skills/security-audit/SKILL.md",
+      "computedHash": "8513eb3b2c39b8d05ef4f47b32ef4d18280b93a5efb91d8df6272f7435034af5"
+    }
+  }
+}
