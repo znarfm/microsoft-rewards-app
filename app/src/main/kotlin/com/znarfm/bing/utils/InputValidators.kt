@@ -4,6 +4,7 @@ object InputValidators {
     const val MIN_SEARCH_COUNT = 1
     const val MAX_SEARCH_COUNT = 50
     const val MIN_DELAY_SECONDS = 0.5
+    const val MAX_DELAY_SECONDS = 300.0
 
     fun validateSearchCount(value: String?): String? {
         if (value.isNullOrBlank()) return "Required"
@@ -16,7 +17,9 @@ object InputValidators {
     fun validateDelay(value: String?): String? {
         if (value.isNullOrBlank()) return "Required"
         val delay = value.trim().toDoubleOrNull() ?: return "Enter a valid number"
+        if (!delay.isFinite()) return "Enter a valid number"
         if (delay < MIN_DELAY_SECONDS) return "Min $MIN_DELAY_SECONDS seconds"
+        if (delay > MAX_DELAY_SECONDS) return "Max ${MAX_DELAY_SECONDS.toInt()} seconds"
         return null
     }
 }

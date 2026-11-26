@@ -36,11 +36,22 @@ jobs:
       - name: Setup Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          SECRET_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          SECRET_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
+          SECRET_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > app/upload-keystore.jks
+            echo "KEYSTORE_STORE_PASSWORD=$SECRET_STORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "KEYSTORE_KEY_ALIAS=${SECRET_KEY_ALIAS:-upload}" >> "$GITHUB_ENV"
+            echo "KEYSTORE_KEY_PASSWORD=$SECRET_KEY_PASSWORD" >> "$GITHUB_ENV"
           else
-            keytool -genkey -v -keystore app/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass microsoft -keypass microsoft -dname "CN=Reward Automator, OU=App, O=Org, L=City, S=State, C=US"
+            EPHEMERAL_PASS=$(openssl rand -hex 24)
+            keytool -genkey -v -keystore app/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass "$EPHEMERAL_PASS" -keypass "$EPHEMERAL_PASS" -dname "CN=Reward Automator, OU=App, O=Org, L=City, S=State, C=US"
+            echo "::add-mask::$EPHEMERAL_PASS"
+            echo "KEYSTORE_STORE_PASSWORD=$EPHEMERAL_PASS" >> "$GITHUB_ENV"
+            echo "KEYSTORE_KEY_ALIAS=upload" >> "$GITHUB_ENV"
+            echo "KEYSTORE_KEY_PASSWORD=$EPHEMERAL_PASS" >> "$GITHUB_ENV"
           fi
 
       - name: Run Unit Tests & Build Release APKs

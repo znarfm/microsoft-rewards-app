@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.webkit.CookieManager
+import android.webkit.WebStorage
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.znarfm.bing.BuildConfig
@@ -290,6 +291,8 @@ class SearchViewModel(
 
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
+            val thisJob = coroutineContext[Job]
+            var currentDeferred: CompletableDeferred<PageLoadResult>? = null
             try {
                 val queries = WordGenerator.distinctQueries(count)
 
@@ -328,6 +331,7 @@ class SearchViewModel(
                         attempt++
 
                         val deferred = CompletableDeferred<PageLoadResult>()
+                        currentDeferred = deferred
                         pendingPageResult = deferred
 
                         _webViewUrlCommands.send(searchUrl)
@@ -412,31 +416,40 @@ class SearchViewModel(
                     )
                 }
             } catch (_: CancellationException) {
-                NotificationHelper.cancelPromotedSearchProgress(appContext)
-                _uiState.update {
-                    it.copy(
-                        searchState = SearchState.Cancelled,
-                        statusBannerMessage = "Search cancelled"
-                    )
+                if (searchJob === thisJob) {
+                    NotificationHelper.cancelPromotedSearchProgress(appContext)
+                    _uiState.update {
+                        it.copy(
+                            searchState = SearchState.Cancelled,
+                            statusBannerMessage = "Search cancelled"
+                        )
+                    }
                 }
             } catch (e: Throwable) {
-                NotificationHelper.cancelPromotedSearchProgress(appContext)
-                val msg = e.message ?: "Unexpected search error"
-                _uiState.update {
-                    it.copy(
-                        searchState = SearchState.Failure(msg),
-                        statusBannerMessage = "Search failed: $msg"
-                    )
-                }
-                if (!isInForeground) {
-                    NotificationHelper.sendImmediateNotification(
-                        context = appContext,
-                        title = "Search Interrupted",
-                        body = "Your Bing search session encountered an error."
-                    )
+                if (searchJob === thisJob) {
+                    NotificationHelper.cancelPromotedSearchProgress(appContext)
+                    val msg = e.message ?: "Unexpected search error"
+                    _uiState.update {
+                        it.copy(
+                            searchState = SearchState.Failure(msg),
+                            statusBannerMessage = "Search failed: $msg"
+                        )
+                    }
+                    if (!isInForeground) {
+                        NotificationHelper.sendImmediateNotification(
+                            context = appContext,
+                            title = "Search Interrupted",
+                            body = "Your Bing search session encountered an error."
+                        )
+                    }
                 }
             } finally {
-                pendingPageResult = null
+                if (currentDeferred != null && pendingPageResult === currentDeferred) {
+                    pendingPageResult = null
+                }
+                if (searchJob === thisJob) {
+                    searchJob = null
+                }
             }
         }
     }
@@ -451,6 +464,34 @@ class SearchViewModel(
             it.copy(
                 searchState = SearchState.Cancelled,
                 statusBannerMessage = "Search cancelled"
+            )
+        }
+    }
+
+    fun signOut() {
+        searchJob?.cancel()
+        searchJob = null
+        pendingPageResult?.cancel()
+        pendingPageResult = null
+        NotificationHelper.cancelPromotedSearchProgress(appContext)
+        try {
+            val cookieManager = CookieManager.getInstance()
+            cookieManager.removeAllCookies(null)
+            cookieManager.flush()
+        } catch (_: Throwable) {
+        }
+        try {
+            WebStorage.getInstance().deleteAllData()
+        } catch (_: Throwable) {
+        }
+        prefs.isLoggedIn = false
+        _uiState.update {
+            it.copy(
+                isLoggedIn = false,
+                selectedTab = 0,
+                overlayDismissed = false,
+                searchState = SearchState.Idle,
+                statusBannerMessage = "Signed out"
             )
         }
     }
