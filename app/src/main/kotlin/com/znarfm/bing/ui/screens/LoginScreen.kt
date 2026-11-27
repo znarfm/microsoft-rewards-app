@@ -89,7 +89,7 @@ fun LoginScreen(
             shape = RoundedCornerShape(28.dp),
             title = {
                 Text(
-                    text = "Skip Sign In?",
+                    text = "Skip sign in?",
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                 )
             },
@@ -106,7 +106,7 @@ fun LoginScreen(
                     },
                     shapes = ButtonDefaults.shapes()
                 ) {
-                    Text("Skip Anyway", fontWeight = FontWeight.Bold)
+                    Text("Skip anyway", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -126,7 +126,7 @@ fun LoginScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Microsoft Sign In",
+                            text = "Microsoft sign in",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                         )
                     },
@@ -221,7 +221,7 @@ fun LoginScreen(
                             )
                             Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
                             Text(
-                                text = "Sign In",
+                                text = "Sign in",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                         }

@@ -269,7 +269,7 @@ fun SearchScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.EmojiEvents,
-                                contentDescription = "Open Rewards Dashboard"
+                                contentDescription = "Open Rewards dashboard"
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
@@ -484,7 +484,7 @@ private fun SearchTabContent(
                         value = uiState.searchCountText,
                         onValueChange = { viewModel.updateSearchCount(it) },
                         enabled = !isSearching,
-                        label = { Text("Search Count") },
+                        label = { Text("Search count") },
                         leadingIcon = {
                             Icon(Icons.Rounded.Search, contentDescription = null)
                         },
@@ -644,7 +644,7 @@ private fun SearchTabContent(
                     )
                     Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
                     Text(
-                        text = if (isSearching) "Cancel Search" else "Start Search",
+                        text = if (isSearching) "Cancel search" else "Start search",
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                     )
                 }

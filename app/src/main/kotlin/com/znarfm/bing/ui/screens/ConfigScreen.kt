@@ -154,11 +154,11 @@ fun ConfigScreen(
     ) {
         // 1. Display & Behavior Card
         ConfigSectionCard(
-            title = "Display & Behavior",
+            title = "Display & behavior",
             icon = Icons.Rounded.Palette
         ) {
             Text(
-                text = "App Theme",
+                text = "App theme",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 10.dp)
@@ -249,7 +249,7 @@ fun ConfigScreen(
 
         // 2. Streak & Activity Card
         ConfigSectionCard(
-            title = "Streak & Activity",
+            title = "Streak & activity",
             icon = Icons.Rounded.LocalFireDepartment
         ) {
             Row(
@@ -280,7 +280,7 @@ fun ConfigScreen(
                             )
                         )
                         Text(
-                            text = "Current Streak",
+                            text = "Current streak",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -311,7 +311,7 @@ fun ConfigScreen(
                             )
                         )
                         Text(
-                            text = "Best Streak",
+                            text = "Best streak",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -322,13 +322,13 @@ fun ConfigScreen(
 
         // 3. Optimization & Automation Card
         ConfigSectionCard(
-            title = "Optimization & Automation",
+            title = "Optimization & automation",
             icon = Icons.Rounded.Speed
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
                 ConfigSwitchRow(
                     icon = Icons.Rounded.DataSaverOn,
-                    title = "Data Saver Mode",
+                    title = "Data saver mode",
                     subtitle = "Blocks WebView images & media for faster searches (turn off if points fail to credit)",
                     checked = uiState.dataSaver,
                     onCheckedChange = { viewModel.setDataSaver(it) },
@@ -338,7 +338,7 @@ fun ConfigScreen(
 
                 ConfigSwitchRow(
                     icon = Icons.Rounded.Vibration,
-                    title = "Completion Haptics",
+                    title = "Completion haptics",
                     subtitle = "Vibrate with celebratory pattern when daily searches finish",
                     checked = uiState.hapticFeedback,
                     onCheckedChange = { viewModel.setHapticFeedback(it) },
@@ -483,7 +483,7 @@ fun ConfigScreen(
                     }
                 ) {
                     Text(
-                        text = "Check for Updates",
+                        text = "Check for updates",
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
                     )
                 }
@@ -502,7 +502,7 @@ fun ConfigScreen(
                     iconTint = MaterialTheme.colorScheme.error
                 ) {
                     Text(
-                        text = "Exit App",
+                        text = "Exit app",
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.error

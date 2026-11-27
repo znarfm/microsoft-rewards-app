@@ -43,7 +43,7 @@ fun LoginReminderDialog(
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
-                text = "Verify Bing Sign-In",
+                text = "Verify Bing sign-in",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
         },
@@ -105,7 +105,7 @@ fun UpdateAvailableDialog(
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
-                text = "Update Available (${release.tagName})",
+                text = "Update available (${release.tagName})",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
         },
@@ -141,7 +141,7 @@ fun UpdateAvailableDialog(
                 enabled = !isDownloading,
                 shapes = ButtonDefaults.shapes()
             ) {
-                Text("Update Now", fontWeight = FontWeight.Bold)
+                Text("Update now", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
@@ -174,7 +174,7 @@ fun ReminderTimePickerDialog(
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
-                text = "Daily Reminder Time",
+                text = "Daily reminder time",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
         },
@@ -211,7 +211,7 @@ fun ExitConfirmDialog(
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
-                text = "Exit App?",
+                text = "Exit app?",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
         },
