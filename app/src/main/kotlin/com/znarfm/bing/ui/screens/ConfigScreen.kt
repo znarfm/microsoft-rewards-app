@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ExitToApp
+import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.Code
@@ -423,7 +424,7 @@ fun ConfigScreen(
             Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
                 ConfigSegmentedItem(
                     index = 0,
-                    count = 5,
+                    count = 6,
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/znarfm"))
                         context.startActivity(intent)
@@ -440,7 +441,7 @@ fun ConfigScreen(
 
                 ConfigSegmentedItem(
                     index = 1,
-                    count = 5,
+                    count = 6,
                     onClick = {
                         val versionText = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
                         val clipboard = context.getSystemService(ClipboardManager::class.java)
@@ -463,12 +464,12 @@ fun ConfigScreen(
                     checked = uiState.autoCheckUpdates,
                     onCheckedChange = { viewModel.setAutoCheckUpdates(it) },
                     index = 2,
-                    count = 5
+                    count = 6
                 )
 
                 ConfigSegmentedItem(
                     index = 3,
-                    count = 5,
+                    count = 6,
                     onClick = { viewModel.checkForUpdates(isManual = true) },
                     icon = Icons.Rounded.SystemUpdate,
                     supportingText = if (uiState.isCheckingUpdate) {
@@ -490,7 +491,20 @@ fun ConfigScreen(
 
                 ConfigSegmentedItem(
                     index = 4,
-                    count = 5,
+                    count = 6,
+                    onClick = { viewModel.signOut() },
+                    icon = Icons.AutoMirrored.Rounded.Logout,
+                    supportingText = "Clear Bing cookies and return to sign-in"
+                ) {
+                    Text(
+                        text = "Sign Out",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+
+                ConfigSegmentedItem(
+                    index = 5,
+                    count = 6,
                     onClick = {
                         if (uiState.searchState is SearchState.InProgress) {
                             showExitConfirm = true

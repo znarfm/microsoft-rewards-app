@@ -35,7 +35,12 @@ object UpdateChecker {
     fun isTrustedHttpsUrl(urlStr: String): Boolean {
         return try {
             val url = URL(urlStr.trim())
-            url.protocol.equals("https", ignoreCase = true) && url.host.isNotBlank()
+            if (!url.protocol.equals("https", ignoreCase = true)) return false
+            val host = url.host.lowercase()
+            host == "github.com" ||
+                host == "api.github.com" ||
+                host == "githubusercontent.com" ||
+                host.endsWith(".githubusercontent.com")
         } catch (_: Throwable) {
             false
         }
@@ -89,14 +94,25 @@ object UpdateChecker {
         currentVersion: String,
         supportedAbis: List<String>
     ): ReleaseInfo? {
-        val tagName = extractJsonStringField(jsonStr, "tag_name") ?: return null
+        val root = JsonParser(jsonStr).parseValue() as? Map<*, *> ?: return null
+        val tagName = root["tag_name"] as? String ?: return null
         if (!isNewerVersion(currentVersion, tagName)) return null
-        val htmlUrl = extractJsonStringField(jsonStr, "html_url") ?: ""
-        val body = extractJsonStringField(jsonStr, "body") ?: ""
+        val htmlUrl = root["html_url"] as? String ?: ""
+        val body = root["body"] as? String ?: ""
 
-        val assets = extractAssets(jsonStr)
+        val assetsRaw = root["assets"] as? List<*> ?: emptyList<Any?>()
+        val assets = assetsRaw.mapNotNull { entry ->
+            val obj = entry as? Map<*, *> ?: return@mapNotNull null
+            val name = obj["name"] as? String
+            val downloadUrl = obj["browser_download_url"] as? String
+            if (!name.isNullOrBlank() && !downloadUrl.isNullOrBlank()) {
+                Pair(name, downloadUrl)
+            } else {
+                null
+            }
+        }
+
         val selectedAsset = selectBestApkAsset(assets, supportedAbis) ?: return null
-
         val versionName = tagName.removePrefix("v").removePrefix("V")
 
         return ReleaseInfo(
@@ -109,146 +125,165 @@ object UpdateChecker {
         )
     }
 
-    internal fun extractJsonStringField(json: String, key: String): String? {
-        val keyMarker = "\"$key\""
-        val idx = json.indexOf(keyMarker)
-        if (idx == -1) return null
+    private class JsonParser(private val input: String) {
+        private var pos = 0
 
-        val colon = json.indexOf(':', idx + keyMarker.length)
-        if (colon == -1) return null
+        fun parseValue(): Any? {
+            skipWhitespace()
+            if (pos >= input.length) return null
+            return when (input[pos]) {
+                '{' -> parseObject()
+                '[' -> parseArray()
+                '"' -> parseString()
+                't', 'f' -> parseBoolean()
+                'n' -> parseNull()
+                '-', in '0'..'9' -> parseNumber()
+                else -> null
+            }
+        }
 
-        val startQuote = json.indexOf('"', colon)
-        if (startQuote == -1) return null
+        private fun parseObject(): Map<String, Any?>? {
+            if (input[pos] != '{') return null
+            pos++
+            val map = LinkedHashMap<String, Any?>()
+            skipWhitespace()
+            if (pos < input.length && input[pos] == '}') {
+                pos++
+                return map
+            }
+            while (pos < input.length) {
+                skipWhitespace()
+                if (pos >= input.length || input[pos] != '"') return null
+                val key = parseString() ?: return null
+                skipWhitespace()
+                if (pos >= input.length || input[pos] != ':') return null
+                pos++
+                val value = parseValue()
+                map[key] = value
+                skipWhitespace()
+                if (pos >= input.length) return null
+                when (input[pos]) {
+                    ',' -> pos++
+                    '}' -> {
+                        pos++
+                        return map
+                    }
+                    else -> return null
+                }
+            }
+            return null
+        }
 
-        val sb = StringBuilder()
-        var i = startQuote + 1
-        var isEscaped = false
-        val len = json.length
+        private fun parseArray(): List<Any?>? {
+            if (input[pos] != '[') return null
+            pos++
+            val list = ArrayList<Any?>()
+            skipWhitespace()
+            if (pos < input.length && input[pos] == ']') {
+                pos++
+                return list
+            }
+            while (pos < input.length) {
+                list.add(parseValue())
+                skipWhitespace()
+                if (pos >= input.length) return null
+                when (input[pos]) {
+                    ',' -> pos++
+                    ']' -> {
+                        pos++
+                        return list
+                    }
+                    else -> return null
+                }
+            }
+            return null
+        }
 
-        while (i < len) {
-            val c = json[i]
-            if (isEscaped) {
+        private fun parseString(): String? {
+            if (pos >= input.length || input[pos] != '"') return null
+            pos++
+            val sb = StringBuilder()
+            while (pos < input.length) {
+                val c = input[pos++]
                 when (c) {
-                    '"' -> sb.append('"')
-                    '\\' -> sb.append('\\')
-                    '/' -> sb.append('/')
-                    'b' -> sb.append('\b')
-                    'f' -> sb.append('\u000C')
-                    'n' -> sb.append('\n')
-                    'r' -> sb.append('\r')
-                    't' -> sb.append('\t')
-                    'u' -> {
-                        if (i + 4 < len) {
-                            val hex = json.substring(i + 1, i + 5)
-                            val code = hex.toIntOrNull(16)
-                            if (code != null) {
-                                sb.append(code.toChar())
-                                i += 4
-                            } else {
-                                sb.append(c)
+                    '"' -> return sb.toString()
+                    '\\' -> {
+                        if (pos >= input.length) return null
+                        when (val esc = input[pos++]) {
+                            '"', '\\', '/' -> sb.append(esc)
+                            'b' -> sb.append('\b')
+                            'f' -> sb.append('\u000C')
+                            'n' -> sb.append('\n')
+                            'r' -> sb.append('\r')
+                            't' -> sb.append('\t')
+                            'u' -> {
+                                if (pos + 4 <= input.length) {
+                                    val code = input.substring(pos, pos + 4).toIntOrNull(16)
+                                    if (code != null) {
+                                        sb.append(code.toChar())
+                                        pos += 4
+                                    } else {
+                                        sb.append('u')
+                                    }
+                                } else {
+                                    return null
+                                }
                             }
-                        } else {
-                            sb.append(c)
+                            else -> sb.append(esc)
                         }
                     }
                     else -> sb.append(c)
                 }
-                isEscaped = false
-            } else {
-                if (c == '\\') {
-                    isEscaped = true
-                } else if (c == '"') {
-                    return sb.toString()
-                } else {
-                    sb.append(c)
-                }
             }
-            i++
+            return null
         }
-        return null
-    }
 
-    internal fun extractAssets(json: String): List<Pair<String, String>> {
-        val assetsIdx = json.indexOf("\"assets\"")
-        if (assetsIdx == -1) return emptyList()
-
-        val arrayStart = json.indexOf('[', assetsIdx)
-        if (arrayStart == -1) return emptyList()
-
-        var depth = 0
-        var arrayEnd = -1
-        var inString = false
-        var isEscaped = false
-
-        for (i in arrayStart until json.length) {
-            val c = json[i]
-            if (isEscaped) {
-                isEscaped = false
-                continue
-            }
-            if (c == '\\') {
-                isEscaped = true
-                continue
-            }
-            if (c == '"') {
-                inString = !inString
-                continue
-            }
-            if (!inString) {
-                if (c == '[') depth++
-                else if (c == ']') {
-                    depth--
-                    if (depth == 0) {
-                        arrayEnd = i
-                        break
-                    }
+        private fun parseBoolean(): Boolean? {
+            return when {
+                input.startsWith("true", pos) -> {
+                    pos += 4
+                    true
                 }
+                input.startsWith("false", pos) -> {
+                    pos += 5
+                    false
+                }
+                else -> null
             }
         }
 
-        if (arrayEnd == -1) return emptyList()
-        val assetsJson = json.substring(arrayStart + 1, arrayEnd)
-
-        val results = mutableListOf<Pair<String, String>>()
-        var objDepth = 0
-        var objStart = -1
-        inString = false
-        isEscaped = false
-
-        for (i in assetsJson.indices) {
-            val c = assetsJson[i]
-            if (isEscaped) {
-                isEscaped = false
-                continue
+        private fun parseNull(): Any? {
+            if (input.startsWith("null", pos)) {
+                pos += 4
             }
-            if (c == '\\') {
-                isEscaped = true
-                continue
-            }
-            if (c == '"') {
-                inString = !inString
-                continue
-            }
-            if (!inString) {
-                if (c == '{') {
-                    if (objDepth == 0) objStart = i
-                    objDepth++
-                } else if (c == '}') {
-                    objDepth--
-                    if (objDepth == 0 && objStart != -1) {
-                        val obj = assetsJson.substring(objStart, i + 1)
-                        val name = extractJsonStringField(obj, "name")
-                        val downloadUrl = extractJsonStringField(obj, "browser_download_url")
-                        if (!name.isNullOrBlank() && !downloadUrl.isNullOrBlank()) {
-                            results.add(Pair(name, downloadUrl))
-                        }
-                        objStart = -1
-                    }
-                }
-            }
+            return null
         }
 
-        return results
+        private fun parseNumber(): Number? {
+            val start = pos
+            if (pos < input.length && input[pos] == '-') pos++
+            while (pos < input.length && input[pos] in '0'..'9') pos++
+            var isDouble = false
+            if (pos < input.length && input[pos] == '.') {
+                isDouble = true
+                pos++
+                while (pos < input.length && input[pos] in '0'..'9') pos++
+            }
+            if (pos < input.length && (input[pos] == 'e' || input[pos] == 'E')) {
+                isDouble = true
+                pos++
+                if (pos < input.length && (input[pos] == '+' || input[pos] == '-')) pos++
+                while (pos < input.length && input[pos] in '0'..'9') pos++
+            }
+            val raw = input.substring(start, pos)
+            return if (isDouble) raw.toDoubleOrNull() else raw.toLongOrNull() ?: raw.toDoubleOrNull()
+        }
+
+        private fun skipWhitespace() {
+            while (pos < input.length && input[pos].isWhitespace()) {
+                pos++
+            }
+        }
     }
 
     suspend fun fetchLatestRelease(

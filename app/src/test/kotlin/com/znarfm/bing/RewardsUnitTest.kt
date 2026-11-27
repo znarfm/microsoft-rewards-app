@@ -154,8 +154,13 @@ class RewardsUnitTest {
         assertNull(InputValidators.validateDelay("0.5"))
         assertNull(InputValidators.validateDelay("10"))
         assertNull(InputValidators.validateDelay("15"))
+        assertNull(InputValidators.validateDelay("300"))
         assertNotNull(InputValidators.validateDelay("0.2"))
         assertNotNull(InputValidators.validateDelay("0.4"))
+        assertNotNull(InputValidators.validateDelay("301"))
+        assertNotNull(InputValidators.validateDelay("NaN"))
+        assertNotNull(InputValidators.validateDelay("Infinity"))
+        assertNotNull(InputValidators.validateDelay("-Infinity"))
         assertNotNull(InputValidators.validateDelay("xyz"))
     }
 
@@ -360,11 +365,41 @@ class RewardsUnitTest {
     }
 
     @Test
-    fun `UpdateChecker isTrustedHttpsUrl accepts only valid https URLs`() {
+    fun `UpdateChecker isTrustedHttpsUrl accepts only valid https GitHub URLs`() {
         assertTrue(UpdateChecker.isTrustedHttpsUrl("https://github.com/znarfm/microsoft-rewards-app/releases/download/v2.5.0/app.apk"))
+        assertTrue(UpdateChecker.isTrustedHttpsUrl("https://objects.githubusercontent.com/github-production-release-asset/app.apk"))
+        assertFalse(UpdateChecker.isTrustedHttpsUrl("https://evil.com/app.apk"))
+        assertFalse(UpdateChecker.isTrustedHttpsUrl("https://notgithub.com/app.apk"))
+        assertFalse(UpdateChecker.isTrustedHttpsUrl("https://github.com.evil.com/app.apk"))
         assertFalse(UpdateChecker.isTrustedHttpsUrl("http://github.com/app.apk"))
         assertFalse(UpdateChecker.isTrustedHttpsUrl("javascript:alert(1)"))
         assertFalse(UpdateChecker.isTrustedHttpsUrl(""))
+    }
+
+    @Test
+    fun `UpdateChecker parseLatestReleaseJson ignores keys embedded inside string values`() {
+        val jsonWithSpoofedBody = """
+            {
+              "body": "Notes mentioning \"tag_name\": \"v99.0.0\" and \"assets\": []",
+              "tag_name": "v2.5.0",
+              "html_url": "https://github.com/znarfm/microsoft-rewards-app/releases/tag/v2.5.0",
+              "assets": [
+                {
+                  "name": "microsoft-rewards-automator-universal.apk",
+                  "browser_download_url": "https://github.com/znarfm/microsoft-rewards-app/releases/download/v2.5.0/microsoft-rewards-automator-universal.apk"
+                }
+              ]
+            }
+        """.trimIndent()
+
+        val release = UpdateChecker.parseLatestReleaseJson(
+            jsonStr = jsonWithSpoofedBody,
+            currentVersion = "2.4.0",
+            supportedAbis = listOf("arm64-v8a")
+        )
+        assertNotNull(release)
+        assertEquals("v2.5.0", release!!.tagName)
+        assertEquals("microsoft-rewards-automator-universal.apk", release.assetName)
     }
 
     @Test
