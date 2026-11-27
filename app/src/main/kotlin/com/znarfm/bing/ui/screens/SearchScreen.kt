@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -70,7 +71,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -367,8 +367,8 @@ private fun StatusSubtitle(uiState: AppUiState) {
             }
             MaterialTheme.colorScheme.primary to text
         }
-        uiState.isCompletedToday -> Color(0xFF2E7D32) to "Completed today"
-        else -> Color(0xFFEF6C00) to "Pending today"
+        uiState.isCompletedToday -> MaterialTheme.colorScheme.primary to "Completed today"
+        else -> MaterialTheme.colorScheme.tertiary to "Pending today"
     }
 
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -430,7 +430,8 @@ private fun SearchTabContent(
         modifier = Modifier
             .fillMaxSize()
             .imePadding()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Embedded Bing WebView Container (Top)
         Card(
@@ -460,6 +461,7 @@ private fun SearchTabContent(
         // Search Controls Card (Bottom)
         Card(
             modifier = Modifier
+                .widthIn(max = 600.dp)
                 .fillMaxWidth()
                 .padding(bottom = bottomCardPadding),
             shape = RoundedCornerShape(24.dp),
@@ -584,6 +586,7 @@ private fun SearchTabContent(
                                 ExpressiveWavyProgress(
                                     progress = frac,
                                     indeterminate = progressState.current == 0,
+                                    contentDescription = "Search progress: ${progressState.current} of ${progressState.total}",
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
