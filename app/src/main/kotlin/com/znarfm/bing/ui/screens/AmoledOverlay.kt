@@ -3,9 +3,7 @@ package com.znarfm.bing.ui.screens
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -34,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -100,13 +99,13 @@ fun AmoledOverlay(
                     touchPosition = down.position
                     val animJob = scope.launch {
                         holdProgress.snapTo(0f)
-                        holdProgress.animateTo(
-                            targetValue = 1f,
-                            animationSpec = tween(
-                                durationMillis = HOLD_TO_WAKE_MS,
-                                easing = LinearEasing
-                            )
-                        )
+                        val startTimeMs = withFrameMillis { it }
+                        while (true) {
+                            val elapsed = withFrameMillis { it } - startTimeMs
+                            val fraction = (elapsed.toFloat() / HOLD_TO_WAKE_MS).coerceIn(0f, 1f)
+                            holdProgress.snapTo(fraction)
+                            if (fraction >= 1f) break
+                        }
                         onDismiss()
                     }
                     waitForUpOrCancellation()

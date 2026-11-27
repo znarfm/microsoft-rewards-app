@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -88,7 +89,7 @@ fun LoginScreen(
             shape = RoundedCornerShape(28.dp),
             title = {
                 Text(
-                    text = "Skip Sign In?",
+                    text = "Skip sign in?",
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                 )
             },
@@ -105,7 +106,7 @@ fun LoginScreen(
                     },
                     shapes = ButtonDefaults.shapes()
                 ) {
-                    Text("Skip Anyway", fontWeight = FontWeight.Bold)
+                    Text("Skip anyway", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -125,7 +126,7 @@ fun LoginScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Microsoft Sign In",
+                            text = "Microsoft sign in",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                         )
                     },
@@ -155,7 +156,9 @@ fun LoginScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .widthIn(max = 480.dp)
+                        .fillMaxWidth(),
                     shape = RoundedCornerShape(28.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -218,7 +221,7 @@ fun LoginScreen(
                             )
                             Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
                             Text(
-                                text = "Sign In",
+                                text = "Sign in",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -247,6 +250,7 @@ fun LoginScreen(
                     ExpressiveWavyProgress(
                         progress = loadingProgress,
                         indeterminate = loadingProgress <= 0.05f,
+                        contentDescription = "Loading Microsoft sign-in page",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 4.dp)

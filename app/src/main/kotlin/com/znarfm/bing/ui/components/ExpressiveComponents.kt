@@ -16,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -46,6 +48,7 @@ fun ExpressiveWavyProgress(
     progress: Float,
     modifier: Modifier = Modifier,
     indeterminate: Boolean = false,
+    contentDescription: String? = null,
     color: Color = MaterialTheme.colorScheme.primary,
     trackColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest
 ) {
@@ -55,9 +58,14 @@ fun ExpressiveWavyProgress(
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
         label = "wavyProgress"
     )
+    val semanticsModifier = if (contentDescription != null) {
+        modifier.semantics { this.contentDescription = contentDescription }
+    } else {
+        modifier
+    }
     if (indeterminate) {
         LinearWavyProgressIndicator(
-            modifier = modifier,
+            modifier = semanticsModifier,
             color = color,
             trackColor = trackColor,
             amplitude = 1f,
@@ -67,7 +75,7 @@ fun ExpressiveWavyProgress(
     } else {
         LinearWavyProgressIndicator(
             progress = { animatedProgress },
-            modifier = modifier,
+            modifier = semanticsModifier,
             color = color,
             trackColor = trackColor,
             amplitude = { 1f },

@@ -1,12 +1,13 @@
 package com.znarfm.bing.ui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.znarfm.bing.utils.UpdateChecker
@@ -41,7 +43,7 @@ fun LoginReminderDialog(
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
-                text = "Verify Bing Sign-In",
+                text = "Verify Bing sign-in",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
         },
@@ -55,11 +57,16 @@ fun LoginReminderDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { dontShowAgain = !dontShowAgain }
+                        .heightIn(min = 48.dp)
+                        .toggleable(
+                            value = dontShowAgain,
+                            role = Role.Checkbox,
+                            onValueChange = { dontShowAgain = it }
+                        )
                 ) {
                     Checkbox(
                         checked = dontShowAgain,
-                        onCheckedChange = { dontShowAgain = it }
+                        onCheckedChange = null
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
@@ -98,7 +105,7 @@ fun UpdateAvailableDialog(
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
-                text = "Update Available (${release.tagName})",
+                text = "Update available (${release.tagName})",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
         },
@@ -114,6 +121,7 @@ fun UpdateAvailableDialog(
                     ExpressiveWavyProgress(
                         progress = downloadProgress,
                         indeterminate = downloadProgress <= 0f,
+                        contentDescription = "Downloading update ${release.tagName}",
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -133,7 +141,7 @@ fun UpdateAvailableDialog(
                 enabled = !isDownloading,
                 shapes = ButtonDefaults.shapes()
             ) {
-                Text("Update Now", fontWeight = FontWeight.Bold)
+                Text("Update now", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
@@ -166,7 +174,7 @@ fun ReminderTimePickerDialog(
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
-                text = "Daily Reminder Time",
+                text = "Daily reminder time",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
         },
@@ -182,7 +190,10 @@ fun ReminderTimePickerDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                shapes = ButtonDefaults.shapes()
+            ) {
                 Text("Cancel")
             }
         }
@@ -200,7 +211,7 @@ fun ExitConfirmDialog(
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
-                text = "Exit App?",
+                text = "Exit app?",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
         },
@@ -223,7 +234,10 @@ fun ExitConfirmDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                shapes = ButtonDefaults.shapes()
+            ) {
                 Text("Cancel")
             }
         }
