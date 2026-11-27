@@ -33,10 +33,16 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("upload-keystore.jks")
-            storePassword = "microsoft"
-            keyAlias = "upload"
-            keyPassword = "microsoft"
+            val keystorePath = System.getenv("KEYSTORE_FILE")
+                ?: (project.findProperty("KEYSTORE_FILE") as? String)
+                ?: "upload-keystore.jks"
+            storeFile = file(keystorePath)
+            storePassword = System.getenv("KEYSTORE_STORE_PASSWORD")
+                ?: (project.findProperty("KEYSTORE_STORE_PASSWORD") as? String)
+            keyAlias = System.getenv("KEYSTORE_KEY_ALIAS")
+                ?: (project.findProperty("KEYSTORE_KEY_ALIAS") as? String)
+            keyPassword = System.getenv("KEYSTORE_KEY_PASSWORD")
+                ?: (project.findProperty("KEYSTORE_KEY_PASSWORD") as? String)
         }
     }
 
@@ -49,7 +55,11 @@ android {
                 "proguard-rules.pro"
             )
             val releaseConfig = signingConfigs.getByName("release")
-            signingConfig = if (releaseConfig.storeFile?.exists() == true) {
+            val hasReleaseSigning = releaseConfig.storeFile?.exists() == true &&
+                !releaseConfig.storePassword.isNullOrBlank() &&
+                !releaseConfig.keyAlias.isNullOrBlank() &&
+                !releaseConfig.keyPassword.isNullOrBlank()
+            signingConfig = if (hasReleaseSigning) {
                 releaseConfig
             } else {
                 signingConfigs.getByName("debug")
